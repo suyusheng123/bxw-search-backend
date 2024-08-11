@@ -16,5 +16,12 @@ import lombok.Data;
 public class Picture {
 	private String title;
 
-	private String url;
+	// 图片原始地址
+	private String murl;
+
+	// 链接地址
+	private String purl;
+
+	// 压缩图片地址
+	private String turl;
 }

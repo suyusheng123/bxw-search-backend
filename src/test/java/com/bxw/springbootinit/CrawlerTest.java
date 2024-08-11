@@ -54,7 +54,9 @@ public class CrawlerTest {
 			String m  = e.select(".iusc").get(0).attr("m");
 			Map<String,Object> map = JSONUtil.toBean(m,Map.class);
 			String murl = (String) map.get("murl");
-			pic.setUrl(murl);
+			String purl = (String) map.get("purl");
+			pic.setMurl(murl);
+			pic.setPurl(purl);
 
 			// 获取标题
 			String title  = e.select(".inflnk").get(0).attr("aria-label");
