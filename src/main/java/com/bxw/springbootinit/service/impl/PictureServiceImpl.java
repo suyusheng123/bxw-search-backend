@@ -25,7 +25,6 @@ import java.util.Map;
  * Package:com.bxw.springbootinit.service.impl
  * Description:
  * 图片服务实现类
- *
  * @Author 卜翔威
  * @Create 2024/8/7 17:08
  * @Version 1.0
@@ -37,10 +36,10 @@ public class PictureServiceImpl implements PictureService {
 
 	@Override
 	public Page<Picture> searchPicture(String searchText, long page, long pageSize) {
-		long currentSize = (page - 1) * pageSize + 1;
-		String url = String.format("https://cn.bing.com/images/search?first=%s", currentSize);
+		long currentSize = (page - 1) * pageSize + 10;
+		String url = String.format("https://cn.bing.com/images/async?q=世界旅游胜地first=%s&mmasync=1", currentSize);
 		if (searchText != null && !searchText.trim().isEmpty()) {
-			url = String.format("https://cn.bing.com/images/search?q=%sfirst=%s", searchText, currentSize);
+			url = String.format("https://cn.bing.com/images/async?q=%s&first=%s&mmasync=1", searchText, currentSize);
 		}
 		Document doc = null;
 		try {

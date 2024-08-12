@@ -2,6 +2,8 @@ package com.bxw.springbootinit.model.entity;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * ClassName:Picture
  * Package:com.bxw.springbootinit.model.entity
@@ -13,7 +15,10 @@ import lombok.Data;
  */
 
 @Data
-public class Picture {
+public class Picture implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
 	private String title;
 
 	// 图片原始地址

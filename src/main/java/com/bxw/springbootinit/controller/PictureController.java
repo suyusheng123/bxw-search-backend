@@ -45,56 +45,34 @@ import java.util.List;
 
 /**
  * 图片接口
- *
  */
 @RestController
 @RequestMapping("/picture")
 @Slf4j
 public class PictureController {
 
-    @Resource
-    private PictureService pictureService;
+	@Resource
+	private PictureService pictureService;
 
-    /**
-     * 分页获取列表（封装类）
-     *
-     * @param pictureQueryRequest
-     * @param request
-     * @return
-     */
-    @PostMapping("/list/page/vo")
-    public BaseResponse<Page<Picture>> listPostVOByPage(@RequestBody PictureQueryRequest pictureQueryRequest,
-                                                        HttpServletRequest request) {
-        long current = pictureQueryRequest.getCurrent();
-        long size = pictureQueryRequest.getPageSize();
-        // 限制爬虫
-        ThrowUtils.throwIf(size > 100, ErrorCode.PARAMS_ERROR);
-        String searchText = pictureQueryRequest.getSearchText();
+	/**
+	 * 分页获取列表（封装类）
+	 *
+	 * @param pictureQueryRequest
+	 * @param request
+	 * @return
+	 */
+	@PostMapping("/list/page/vo")
+	public BaseResponse<Page<Picture>> listPostVOByPage(@RequestBody PictureQueryRequest pictureQueryRequest,
+	                                                    HttpServletRequest request) {
+		long current = pictureQueryRequest.getCurrent();
+		long size = pictureQueryRequest.getPageSize();
+		// 限制爬虫
+		ThrowUtils.throwIf(size > 100, ErrorCode.PARAMS_ERROR);
+		String searchText = pictureQueryRequest.getSearchText();
 
-        Page<Picture> picturePage = pictureService.searchPicture(searchText, current, size);
-        return ResultUtils.success(picturePage);
-    }
+		Page<Picture> picturePage = pictureService.searchPicture(searchText, current, size);
+		return ResultUtils.success(picturePage);
+	}
 
-
-//    @GetMapping("/img/{proxy}")
-//    public void getImg(@PathVariable String proxy, HttpServletResponse response) throws Exception {
-//        String imageUrl = new String(Base64.getDecoder().decode(proxy), StandardCharsets.UTF_8);
-//        TrustAllCertManagerUtils.rawDataHomePage(imageUrl);
-//        ResponseEntity<byte[]> responseEntity = new RestTemplate().exchange(imageUrl, HttpMethod.GET,null, byte[].class);
-//
-//
-//        //获取entity中的数据
-//        byte[] body = responseEntity.getBody();
-//        //创建输出流  输出到本地
-//        OutputStream os = response.getOutputStream();
-//
-//        // 将图片数据流写入响应输出流
-//        if (responseEntity.getStatusCode() == HttpStatus.OK && responseEntity.getBody() != null) {
-//            response.setContentType(MediaType.IMAGE_JPEG_VALUE); // 设置响应内容类型
-//            response.getOutputStream().write(responseEntity.getBody()); // 将图片数据写入响应输出流
-//        } else {
-//            response.setStatus(HttpStatus.NOT_FOUND.value()); // 处理请求失败的情况
-//        }
-//    }
-    // endregion
+	// endregion
 }

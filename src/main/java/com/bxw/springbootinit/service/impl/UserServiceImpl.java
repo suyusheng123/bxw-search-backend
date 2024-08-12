@@ -4,10 +4,12 @@ import static com.bxw.springbootinit.constant.UserConstant.USER_LOGIN_STATE;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bxw.springbootinit.common.ErrorCode;
 import com.bxw.springbootinit.constant.CommonConstant;
 import com.bxw.springbootinit.exception.BusinessException;
+import com.bxw.springbootinit.exception.ThrowUtils;
 import com.bxw.springbootinit.mapper.UserMapper;
 import com.bxw.springbootinit.model.dto.user.UserQueryRequest;
 import com.bxw.springbootinit.model.entity.User;
@@ -266,5 +268,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
         return queryWrapper;
+    }
+
+    @Override
+    public Page<UserVO> listUserVOByPage(UserQueryRequest userQueryRequest) {
+        long current = userQueryRequest.getCurrent();
+        long size = userQueryRequest.getPageSize();
+        ThrowUtils.throwIf(size > 100, ErrorCode.PARAMS_ERROR);
+        Page<User> userPage = this.page(new Page<>(current, size),
+                this.getQueryWrapper(userQueryRequest));
+        Page<UserVO> userVOPage = new Page<>(current, size, userPage.getTotal());
+        List<UserVO> userVO = this.getUserVO(userPage.getRecords());
+        userVOPage.setRecords(userVO);
+        return userVOPage;
     }
 }
