@@ -21,4 +21,7 @@ public class SearchVO implements Serializable {
     private List<UserVO> userList;
 
     private List<Picture> pictureList;
+
+    // 记录总数
+    private long total;
 }

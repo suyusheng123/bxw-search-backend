@@ -17,4 +17,6 @@ public class QueryRequest extends PageRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String searchText;
+
+    private String type;
 }
