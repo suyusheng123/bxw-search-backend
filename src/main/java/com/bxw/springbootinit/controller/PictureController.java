@@ -1,47 +1,21 @@
 package com.bxw.springbootinit.controller;
 
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bxw.springbootinit.annotation.AuthCheck;
 import com.bxw.springbootinit.common.BaseResponse;
-import com.bxw.springbootinit.common.DeleteRequest;
 import com.bxw.springbootinit.common.ErrorCode;
 import com.bxw.springbootinit.common.ResultUtils;
-import com.bxw.springbootinit.constant.UserConstant;
-import com.bxw.springbootinit.exception.BusinessException;
 import com.bxw.springbootinit.exception.ThrowUtils;
 import com.bxw.springbootinit.model.dto.picture.PictureQueryRequest;
-import com.bxw.springbootinit.model.dto.post.PostAddRequest;
-import com.bxw.springbootinit.model.dto.post.PostEditRequest;
-import com.bxw.springbootinit.model.dto.post.PostQueryRequest;
-import com.bxw.springbootinit.model.dto.post.PostUpdateRequest;
 import com.bxw.springbootinit.model.entity.Picture;
-import com.bxw.springbootinit.model.entity.Post;
-import com.bxw.springbootinit.model.entity.User;
-import com.bxw.springbootinit.model.vo.PostVO;
 import com.bxw.springbootinit.service.PictureService;
-import com.bxw.springbootinit.service.PostService;
-import com.bxw.springbootinit.service.UserService;
-import com.bxw.springbootinit.utils.InstallCertUtils;
-import com.bxw.springbootinit.utils.TrustAllCertManagerUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.OutputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.Base64;
-import java.util.List;
 
 /**
  * 图片接口

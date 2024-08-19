@@ -42,7 +42,9 @@ public class PostDataSourceAdapter implements DataSource<PostVO> {
 		ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 		if (servletRequestAttributes != null) {
 			HttpServletRequest request = servletRequestAttributes.getRequest();
-			Page<Post> postPage = postService.listMyPostVOByPage(postQueryRequest);
+//			Page<Post> postPage = postService.listMyPostVOByPage(postQueryRequest);
+			// 改用es的查询
+			Page<Post> postPage = postService.searchFromEs(postQueryRequest);
 			return postService.getPostVOPage(postPage,request);
 		}
 		return null;

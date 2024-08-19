@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bxw.springbootinit.mapper.AggregatedSearchMapper">
+
+    <resultMap id="BaseResultMap" type="com.bxw.springbootinit.model.entity.AggregatedSearch">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="url" column="url" jdbcType="VARCHAR"/>
+        <result property="cover" column="cover" jdbcType="VARCHAR"/>
+        <result property="sourceUrl" column="sourceUrl" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="tags" column="tags" jdbcType="VARCHAR"/>
+        <result property="type" column="type" jdbcType="TINYINT"/>
+        <result property="userId" column="userId" jdbcType="BIGINT"/>
+        <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,title,url,sourceUrl,
+        cover,content,tags,type,
+        userId,createTime,updateTime,isDelete
+    </sql>
+
+    <insert id="saveAggregatedSearchList">
+        INSERT INTO aggregated_search (id, title, url, sourceUrl, cover, content, tags, type, userId)
+        VALUES
+        <foreach collection="searchList" item="search" separator=",">
+            (
+            #{search.id},#{search.title},#{search.url},#{search.sourceUrl},
+            #{search.cover},#{search.content},#{search.tags},#{search.type},
+            #{search.userId}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        url = VALUES(url),
+        sourceUrl = VALUES(sourceUrl),
+        cover = VALUES(cover),
+        content = VALUES(content),
+        tags = VALUES(tags),
+        type = VALUES(type),
+        userId = VALUES(userId)
+    </insert>
+</mapper>
