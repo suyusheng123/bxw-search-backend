@@ -1,13 +1,12 @@
-package com.bxw.springbootinit.adapter.datasource;
+package com.bxw.springbootinit.adapter.datasource.impl;
 
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bxw.springbootinit.datasource.DataSource;
+import com.bxw.springbootinit.adapter.datasource.DataSource;
 import com.bxw.springbootinit.model.dto.user.UserQueryRequest;
 import com.bxw.springbootinit.model.vo.UserVO;
+import com.bxw.springbootinit.service.AggregatedSearchService;
 import com.bxw.springbootinit.service.UserService;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
@@ -25,15 +24,19 @@ import javax.annotation.Resource;
 @Component
 public class UserDataSourceAdapter implements DataSource<UserVO> {
 
+
+	@Resource
+	private AggregatedSearchService aggregatedSearchService;
 	@Resource
 	private UserService userService;
 
 	@Override
-	public Page<UserVO> doSearch(String searchText, long current, long pageSize) {
+	public void doSearch(String searchText, long current, long pageSize) {
 		UserQueryRequest userQueryRequest = new UserQueryRequest();
 		userQueryRequest.setUserName(searchText);
 		userQueryRequest.setCurrent((int) current);
 		userQueryRequest.setPageSize((int) pageSize);
-		return userService.listUserVOByPage(userQueryRequest);
+		userService.listUserVOByPage(userQueryRequest);
 	}
+
 }

@@ -1,10 +1,10 @@
 package com.bxw.springbootinit.registry.datasource;
 
-import com.bxw.springbootinit.adapter.datasource.PictureDataSourceAdapter;
-import com.bxw.springbootinit.adapter.datasource.PostDataSourceAdapter;
-import com.bxw.springbootinit.adapter.datasource.UserDataSourceAdapter;
-import com.bxw.springbootinit.datasource.DataSource;
-import com.bxw.springbootinit.model.enums.SearchEnum;
+import com.bxw.springbootinit.adapter.datasource.impl.PictureDataSourceAdapter;
+import com.bxw.springbootinit.adapter.datasource.impl.PostDataSourceAdapter;
+import com.bxw.springbootinit.adapter.datasource.impl.UserDataSourceAdapter;
+import com.bxw.springbootinit.adapter.datasource.DataSource;
+import com.bxw.springbootinit.adapter.datasource.impl.VideoDataSourceAdapter;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -33,15 +33,19 @@ public class DataSourceRegistry {
 	@Resource
 	private PictureDataSourceAdapter pictureDataSourceAdapter;
 
-	private final Map<SearchEnum,DataSource<?>> dataSources = new HashMap<>();
+	@Resource
+	private VideoDataSourceAdapter videoDataSourceAdapter;
+
+	private final Map<String,DataSource<?>> dataSources = new HashMap<>();
 
 	@PostConstruct
 	public void doInit() {
-		dataSources.put(SearchEnum.POST,postDataSourceAdapter);
-		dataSources.put(SearchEnum.USER,userDataSourceAdapter);
-		dataSources.put(SearchEnum.PICTURE,pictureDataSourceAdapter);
+		dataSources.put("post",postDataSourceAdapter);
+		dataSources.put("user",userDataSourceAdapter);
+		dataSources.put("picture",pictureDataSourceAdapter);
+		dataSources.put("video",videoDataSourceAdapter);
 	}
-	public DataSource<?> getDataSource(SearchEnum searchEnum) {
-		return dataSources.get(searchEnum);
+	public DataSource<?> getDataSourceByType(String type) {
+		return dataSources.get(type);
 	}
 }

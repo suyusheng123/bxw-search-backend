@@ -151,6 +151,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!--解析 markdown 转 文本、world..-->
+        <dependency>
+            <groupId>com.atlassian.commonmark</groupId>
+            <artifactId>commonmark</artifactId>
+            <version>0.17.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -28,14 +28,14 @@ public class SearchController {
 	@Resource
 	private AggregatedSearchService aggregatedSearchService;
 	/**
-	 * 分页获取列表(聚合接口)
+	 * 聚合搜索接口(废弃版)
 	 * @param queryRequest
 	 * @return
 	 */
-	@PostMapping("/all")
-	public BaseResponse<SearchVO> searchAll(@RequestBody QueryRequest queryRequest, HttpServletRequest request) {
-		return ResultUtils.success(searchFacade.searchAll(queryRequest, request));
-	}
+//	@PostMapping("/all")
+//	public BaseResponse<SearchVO> searchAll(@RequestBody QueryRequest queryRequest, HttpServletRequest request) {
+//		return ResultUtils.success(searchFacade.searchAll(queryRequest, request));
+//	}
 
 	/**
 	 * 搜索建议接口
@@ -46,5 +46,12 @@ public class SearchController {
 	public BaseResponse<List<SuggestVO>> getSearchSuggestList(@RequestParam(name = "keyword") String keyword) {
 		return ResultUtils.success(aggregatedSearchService.getSearchSuggest(keyword));
 	}
+
+	@PostMapping("/async")
+	public BaseResponse<SearchVO> searchEs(@RequestBody QueryRequest queryRequest) {
+		return ResultUtils.success(searchFacade.searchAll(queryRequest));
+	}
+
+
 	// endregion
 }

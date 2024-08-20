@@ -23,9 +23,9 @@ public interface AggregatedSearchService extends IService<AggregatedSearch> {
 	/**
 	 * es 搜索
 	 *
-	 * @param request 查询条件
+	 * @param search 查询条件
 	 */
-	List<AggregatedSearchVO> aggregatedSearchEs(SearchQueryEsRequest request);
+	List<AggregatedSearchVO> aggregatedSearchEs(SearchQueryEsRequest search);
 
 	/**
 	 * es 搜索
@@ -47,21 +47,21 @@ public interface AggregatedSearchService extends IService<AggregatedSearch> {
 	 *
 	 * @param current 页码
 	 */
-	void fetchPostPassage(int current);
+	void fetchPostPassage(long current,long currentSize);
 
 	/**
 	 * 批量保存爬取的图片数据
 	 *
 	 * @param searchText
 	 */
-	void fetchPicturePassage(String searchText);
+	void fetchPicturePassage(String searchText,long first);
 
 	/**
 	 * 批量保存爬取的视频数据
 	 *
 	 * @param searchText
 	 */
-	void fetchVideoPassage(String searchText);
+	void fetchVideoPassage(String searchText,long first);
 
 	/**
 	 * 保存搜索记录和保存爬取的数据

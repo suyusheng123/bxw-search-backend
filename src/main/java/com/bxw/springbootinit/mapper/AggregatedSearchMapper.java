@@ -10,8 +10,6 @@ import java.util.List;
 
 /**
  * aggregated_search mapper
- *
- * @author aliterc
  */
 @Mapper
 public interface AggregatedSearchMapper extends BaseMapper<AggregatedSearch> {
