@@ -1,8 +1,7 @@
 package com.bxw.springbootinit.registry.datasource;
 
 import com.bxw.springbootinit.adapter.datasource.impl.PictureDataSourceAdapter;
-import com.bxw.springbootinit.adapter.datasource.impl.PostDataSourceAdapter;
-import com.bxw.springbootinit.adapter.datasource.impl.UserDataSourceAdapter;
+import com.bxw.springbootinit.adapter.datasource.impl.ArticleDataSourceAdapter;
 import com.bxw.springbootinit.adapter.datasource.DataSource;
 import com.bxw.springbootinit.adapter.datasource.impl.VideoDataSourceAdapter;
 import org.springframework.stereotype.Component;
@@ -25,10 +24,7 @@ import java.util.Map;
 public class DataSourceRegistry {
 
 	@Resource
-	private PostDataSourceAdapter postDataSourceAdapter;
-
-	@Resource
-	private UserDataSourceAdapter userDataSourceAdapter;
+	private ArticleDataSourceAdapter postDataSourceAdapter;
 
 	@Resource
 	private PictureDataSourceAdapter pictureDataSourceAdapter;
@@ -36,16 +32,15 @@ public class DataSourceRegistry {
 	@Resource
 	private VideoDataSourceAdapter videoDataSourceAdapter;
 
-	private final Map<String,DataSource<?>> dataSources = new HashMap<>();
+	private final Map<String,DataSource> dataSources = new HashMap<>();
 
 	@PostConstruct
 	public void doInit() {
 		dataSources.put("post",postDataSourceAdapter);
-		dataSources.put("user",userDataSourceAdapter);
 		dataSources.put("picture",pictureDataSourceAdapter);
 		dataSources.put("video",videoDataSourceAdapter);
 	}
-	public DataSource<?> getDataSourceByType(String type) {
+	public DataSource getDataSourceByType(String type) {
 		return dataSources.get(type);
 	}
 }

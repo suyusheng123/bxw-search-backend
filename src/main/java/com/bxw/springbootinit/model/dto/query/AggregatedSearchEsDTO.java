@@ -43,40 +43,19 @@ public class AggregatedSearchEsDTO implements Serializable {
      */
     private String titleSuggest;
 
-    /**
-     * url
-     */
-    private String url;
 
-    /**
-     * 来源
-     */
-    private String sourceUrl;
-
-    /**
-     * 封面
-     */
-    private String cover;
 
     /**
      * 内容
      */
     private String content;
 
-    /**
-     * 标签列表 json
-     */
-    private List<String> tags;
 
     /**
      * 类型[1:帖子 2:图片 3:视频 4:用户]
      */
     private int type;
 
-    /**
-     * 创建人id
-     */
-    private String userId;
 
     /**
      * 创建时间
@@ -90,10 +69,6 @@ public class AggregatedSearchEsDTO implements Serializable {
     @Field(index = false, store = true, type = FieldType.Date, format = {}, pattern = DATE_TIME_PATTERN)
     private Date updateTime;
 
-    /**
-     * 是否删除
-     */
-    private Integer isDelete;
 
     private static final Gson GSON = new Gson();
 
@@ -111,11 +86,6 @@ public class AggregatedSearchEsDTO implements Serializable {
         esDTO.setTitleSuggest(search.getTitle());
         BeanUtils.copyProperties(search, esDTO);
         log.info("esDto = {}", esDTO);
-        String tagsStr = search.getTags();
-        if (StringUtils.isNotBlank(tagsStr)) {
-            esDTO.setTags(GSON.fromJson(tagsStr, new TypeToken<List<String>>() {
-            }.getType()));
-        }
         return esDTO;
     }
 
@@ -131,10 +101,6 @@ public class AggregatedSearchEsDTO implements Serializable {
         }
         AggregatedSearch search = new AggregatedSearch();
         BeanUtils.copyProperties(esDTO, search);
-        List<String> tagList = esDTO.getTags();
-        if (CollectionUtils.isNotEmpty(tagList)) {
-            search.setTags(GSON.toJson(tagList));
-        }
         return search;
     }
 }

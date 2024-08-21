@@ -2,35 +2,37 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bxw.springbootinit.mapper.AggregatedSearchMapper">
+<mapper namespace="com.bxw.springbootinit.mapper.ArticleMapper">
 
-    <resultMap id="BaseResultMap" type="com.bxw.springbootinit.model.entity.AggregatedSearch">
+    <resultMap id="BaseResultMap" type="com.bxw.springbootinit.model.entity.Article">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="url" column="url" jdbcType="VARCHAR"/>
+        <result property="sourceUrl" column="sourceUrl" jdbcType="VARCHAR"/>
         <result property="content" column="content" jdbcType="VARCHAR"/>
-        <result property="content" column="content" jdbcType="VARCHAR"/>
-        <result property="type" column="type" jdbcType="TINYINT"/>
         <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
         <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="publishTime" column="publishTime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,title,
-        content,type,
-        createTime,updateTime
+        id,title,url,sourceUrl,
+        content,publishTime,createTime,updateTime
     </sql>
 
-    <insert id="saveAggregatedSearchList">
-        INSERT INTO aggregated_search (id,title,content,type)
+    <insert id="saveArticle">
+        INSERT INTO article (id, title, url, sourceUrl,content,publishTime)
         VALUES
         <foreach collection="searchList" item="search" separator=",">
             (
-            #{search.id},#{search.title},
-             #{search.content},#{search.type}
+            #{search.id},#{search.title},#{search.url},#{search.sourceUrl},
+            #{search.content},#{search.publishTime}
             )
         </foreach>
         ON DUPLICATE KEY UPDATE
+        url = VALUES(url),
+        sourceUrl = VALUES(sourceUrl),
         content = VALUES(content),
-        type = VALUES(type)
+        publishTime = VALUES(publishTime)
     </insert>
 </mapper>

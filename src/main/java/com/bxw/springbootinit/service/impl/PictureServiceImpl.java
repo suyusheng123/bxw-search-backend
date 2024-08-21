@@ -1,23 +1,32 @@
 package com.bxw.springbootinit.service.impl;
 
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bxw.springbootinit.MainApplication;
 import com.bxw.springbootinit.common.ErrorCode;
 import com.bxw.springbootinit.exception.BusinessException;
+import com.bxw.springbootinit.mapper.PictureMapper;
+import com.bxw.springbootinit.model.entity.Article;
 import com.bxw.springbootinit.model.entity.Picture;
+import com.bxw.springbootinit.model.vo.ArticleVO;
+import com.bxw.springbootinit.model.vo.PictureVO;
 import com.bxw.springbootinit.service.PictureService;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 /**
@@ -32,45 +41,29 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class PictureServiceImpl implements PictureService {
+public class PictureServiceImpl extends ServiceImpl<PictureMapper,Picture>implements PictureService {
+
 
 	@Override
-	public Page<Picture> searchPicture(String searchText, long page, long pageSize) {
-		long currentSize = (page - 1) * pageSize + 10;
-		String url = String.format("https://cn.bing.com/images/async?q=世界旅游胜地first=%s&mmasync=1", currentSize);
-		if (searchText != null && !searchText.trim().isEmpty()) {
-			url = String.format("https://cn.bing.com/images/async?q=%s&first=%s&mmasync=1", searchText, currentSize);
-		}
-		Document doc = null;
-		try {
-			doc = Jsoup.connect(url).get();
-		} catch (IOException e) {
-			log.info("异常为{}", e);
-			throw new BusinessException(ErrorCode.SYSTEM_ERROR, ErrorCode.SYSTEM_ERROR.getMessage());
-		}
-		Elements select = doc.select(".iuscp.isv");
-		List<Picture> pictures = new ArrayList<>();
-		for (Element e : select) {
-			if (pictures.size() >= pageSize) break;
-			Picture pic = new Picture();
-			String m = e.select(".iusc").get(0).attr("m");
-			Map<String, Object> map = JSONUtil.toBean(m, Map.class);
-			String turl = (String) map.get("turl");
-			String purl = (String) map.get("purl");
-			// 获取图片地址
-			pic.setTurl(turl);
-			// 获取链接地址
-			pic.setPurl(purl);
+	public boolean insertBatchPictures(List<Picture> pictures) {
+		return this.baseMapper.savePicture(pictures);
+	}
 
-			// 获取标题
-			String title = e.select(".inflnk").get(0).attr("aria-label");
-			pic.setTitle(title);
-			pictures.add(pic);
-		}
-		log.info("图片总共{}张", pictures.size());
-		Page<Picture> picturePage = new Page<>(page, pageSize);
-		picturePage.setRecords(pictures);
-
-		return picturePage;
+	@Override
+	public Page<PictureVO> searchPictureList(List<String> title, long current, long pageSize) {
+		Page<Picture> page = new Page<>(current,pageSize);
+		QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
+		queryWrapper.in("title",title);
+		queryWrapper.orderByDesc("updateTime");
+		page = this.page(page,queryWrapper);
+		Page<PictureVO> newPage = new Page<>();
+		BeanUtils.copyProperties(page,newPage,"records");
+		List<PictureVO> pictureVOList = page.getRecords().stream().map(picture -> {
+			PictureVO pictureVO = new PictureVO();
+			BeanUtils.copyProperties(picture,pictureVO);
+			return pictureVO;
+		}).collect(Collectors.toList());
+		newPage.setRecords(pictureVOList);
+		return newPage;
 	}
 }

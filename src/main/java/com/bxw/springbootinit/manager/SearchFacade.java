@@ -114,16 +114,6 @@ public class SearchFacade {
 		String searchText = queryRequest.getSearchText();
 		long current = queryRequest.getCurrent();
 		long size = queryRequest.getPageSize();
-//        if (StringUtils.isBlank(searchText)) {
-//            searchText = enumByValue.getText();
-//        }
-		// todo 添加搜索记录
-//		if (StringUtils.isNotBlank(searchText)) {
-//			AddSearchHistoryRequest searchHistoryRequest = new AddSearchHistoryRequest();
-//			searchHistoryRequest.setContent(searchText);
-//			searchHistoryRequest.setType(enumByValue.getType());
-//			searchHistoryService.addSearchHistory(searchHistoryRequest);
-//		}
 
 		SearchVO searchVO = new SearchVO();
 		//从redis中获取搜索数据
@@ -141,7 +131,7 @@ public class SearchFacade {
 		}
 		//爬取数据并入库
 		CompletableFuture<List<AggregatedSearchVO>> esSearchTask = CompletableFuture.runAsync(() -> {
-			DataSource<?> dataSource = dataSourceRegistry.getDataSourceByType(type);
+			DataSource dataSource = dataSourceRegistry.getDataSourceByType(type);
 			dataSource.doSearch(searchText,current,size);
 		}, esSearchExecutor).thenComposeAsync(data ->
 				//es搜索

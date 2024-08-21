@@ -47,21 +47,21 @@ public interface AggregatedSearchService extends IService<AggregatedSearch> {
 	 *
 	 * @param current 页码
 	 */
-	void fetchPostPassage(long current,long currentSize);
+	void fetchArticles(String searchText,long current);
 
 	/**
 	 * 批量保存爬取的图片数据
 	 *
 	 * @param searchText
 	 */
-	void fetchPicturePassage(String searchText,long first);
+	void fetchPictures(String searchText,long first);
 
 	/**
 	 * 批量保存爬取的视频数据
 	 *
 	 * @param searchText
 	 */
-	void fetchVideoPassage(String searchText,long first);
+	void fetchVideos(String searchText,long first);
 
 	/**
 	 * 保存搜索记录和保存爬取的数据

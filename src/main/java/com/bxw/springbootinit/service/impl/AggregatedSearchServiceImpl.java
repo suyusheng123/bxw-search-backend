@@ -2,6 +2,8 @@ package com.bxw.springbootinit.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.URLUtil;
@@ -17,16 +19,15 @@ import com.bxw.springbootinit.exception.BusinessException;
 import com.bxw.springbootinit.mapper.AggregatedSearchMapper;
 import com.bxw.springbootinit.model.dto.query.AggregatedSearchEsDTO;
 import com.bxw.springbootinit.model.dto.query.SearchQueryEsRequest;
-import com.bxw.springbootinit.model.entity.AggregatedSearch;
-import com.bxw.springbootinit.model.entity.User;
+import com.bxw.springbootinit.model.entity.*;
 import com.bxw.springbootinit.model.enums.SearchTypeEnum;
 import com.bxw.springbootinit.model.vo.AggregatedSearchVO;
 import com.bxw.springbootinit.model.vo.PageResult;
 import com.bxw.springbootinit.model.vo.SuggestVO;
 import com.bxw.springbootinit.model.vo.UserVO;
-import com.bxw.springbootinit.service.AggregatedSearchService;
-import com.bxw.springbootinit.service.UserService;
+import com.bxw.springbootinit.service.*;
 import com.bxw.springbootinit.utils.SqlUtils;
+import com.sun.org.apache.bcel.internal.generic.NEW;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -43,6 +44,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.jsoup.Jsoup;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -56,13 +58,16 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -78,9 +83,28 @@ import java.util.stream.Collectors;
 public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMapper, AggregatedSearch> implements AggregatedSearchService {
 
 	@Resource
+	private PlatformTransactionManager transactionManager;
+
+	private TransactionDefinition transactionDefinition;
+	@Resource
 	private ElasticsearchRestTemplate elasticsearchRestTemplate;
 	@Resource
 	private UserService userService;
+
+	@Resource
+	private ArticleService articleService;
+
+	@Resource
+	private PictureService pictureService;
+
+	@Resource
+	private VideoService videoService;
+
+
+	@PostConstruct
+	public void init() {
+		this.transactionDefinition = new DefaultTransactionDefinition();
+	}
 
 	/**
 	 * es搜索
@@ -101,7 +125,6 @@ public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMap
 		long pageSize = search.getPageSize();
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 		//过滤条件
-		boolQueryBuilder.filter(QueryBuilders.termQuery(AggregatedSearch.IS_DELETE, 0));
 		//类型条件
 		boolQueryBuilder.filter(QueryBuilders.termQuery(AggregatedSearch.TYPE, type));
 //        boolQueryBuilder.filter(QueryBuilders.termQuery("_score", 0.0));
@@ -156,30 +179,7 @@ public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMap
 				}
 				searchList.add(searchEsDTO);
 			}
-			List<AggregatedSearchVO> searchVoList = BeanUtil.copyToList(searchList, AggregatedSearchVO.class);
-			//如果是 搜索帖子需要查询用户数据
-			if (SearchTypeEnum.POST.getType().intValue() == type.intValue()) {
-				List<Long> userIdList = searchHitList.stream().map(searchHit ->
-								Long.parseLong(searchHit.getContent().getUserId())).
-						collect(Collectors.toList());
-				Map<Long, List<AggregatedSearchVO>> idSearchList = searchVoList.stream().filter(searchVO -> searchVO.getUserId() != null).collect(Collectors.groupingBy(AggregatedSearchVO::getUserId));
-				List<User> userList = userService.listByIds(userIdList);
-				if (CollUtil.isNotEmpty(userList)) {
-					for (User user : userList) {
-						Long userId = user.getId();
-						if (idSearchList.containsKey(userId)) {
-							List<AggregatedSearchVO> searchEsDTOList = idSearchList.get(userId);
-							for (AggregatedSearchVO searchEsDTO : searchEsDTOList) {
-								UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
-								searchEsDTO.setUser(userVO);
-							}
-						} else {
-							log.error("post userId error postData = {} userId = {}", idSearchList.get(userId), userId);
-						}
-					}
-				}
-			}
-			return searchVoList;
+			return BeanUtil.copyToList(searchList, AggregatedSearchVO.class);
 		}
 		log.info("搜索未命中 searchText = {} type = {}", searchText, type);
 		return new ArrayList<>();
@@ -242,33 +242,27 @@ public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMap
 	}
 
 	/**
-	 * 爬取帖子的数据
+	 * 爬取文章的数据
 	 *
 	 * @param current 页码
 	 */
 	@Override
-	public void fetchPostPassage(long current, long currentSize) {
-		//1、获取数据
-		String url = "http://api.code-nav.cn/api/news/list/page/vo";
-		String json = String.format("{\n" +
-				"  \"current\": %s,\n" +
-				"  \"pageSize\": %s,\n" +
-				"  \"sortField\": \"publishTime\",\n" +
-				"  \"sortOrder\": \"descend\",\n" +
-				"  \"searchText\": \"elas\"\n" +
-				"}", current, currentSize);
-		String res = HttpRequest.post(url).body(json).execute().body();
+	public void fetchArticles(String searchText, long current) {
+		String url = String.format("https://kaifa.baidu.com/rest/v1/search?wd=elasticsearch&paramList=page_num=%s,page_size=10&pageNum=%s&pageSize=10", current, current);
+		if (!StringUtil.isBlank(searchText) || !Objects.equals(searchText, "null")) {
+			url = String.format("https://kaifa.baidu.com/rest/v1/search?wd=%s&paramList=page_num=%s,page_size=10&pageNum=%s&pageSize=10", searchText, current, current);
+		}
+		String res = HttpRequest.get(url).execute().body();
 		String sourceUrl = URLUtil.url(url).getHost();
-		log.info("code-nav.cn /api/post/search/page/vo jsonStr = {}", res);
 		//2、处理数据
 		if (StringUtils.isBlank(res)) {
 			log.error("code-nav.cn /api/post/search/page/vo res is null res = {}", res);
 			return;
 		}
 		Map<String, Object> dataMap = JSONUtil.toBean(res, Map.class);
-		int code = (int) dataMap.get("code");
-		if (code != 0) {
-			log.error("code-nav.cn /api/post/search/page/vo 接口调用失败 code = {}", code);
+		String urlStatus = (String) dataMap.get("status");
+		if (StringUtil.isBlank(urlStatus)) {
+			log.error("code-nav.cn /api/post/search/page/vo 接口调用失败 code = {}", urlStatus);
 			return;
 		}
 		JSONObject data = (JSONObject) dataMap.get("data");
@@ -276,50 +270,77 @@ public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMap
 			log.error("code-nav.cn /api/post/search/page/vo data is null data = {}", data);
 			return;
 		}
-		JSONArray records = (JSONArray) data.get("records");
+		JSONObject documents = (JSONObject) data.get("documents");
+		if (ObjectUtils.isEmpty(documents)) {
+			log.error("code-nav.cn /api/post/search/page/vo documents is null records = {}", documents);
+			return;
+		}
+
+		JSONArray records = (JSONArray) documents.get("data");
 		if (ObjectUtils.isEmpty(records)) {
 			log.error("code-nav.cn /api/post/search/page/vo records is null records = {}", records);
 			return;
 		}
-		List<AggregatedSearch> postList = new ArrayList<>(records.size());
-		//处理帖子数据
+
+		List<AggregatedSearch> searches = new ArrayList<>(records.size());
+		List<Article> articles = new ArrayList<>(records.size());
+		//处理文章数据
 		for (Object itemData : records) {
 			JSONObject item = (JSONObject) itemData;
-			AggregatedSearch post = new AggregatedSearch();
-			//帖子id
-			String idStr = item.getStr("id");
-			post.setId(Long.valueOf(idStr));
-			//帖子标题
-			String title = item.getStr("title");
-			if (StringUtils.isNotBlank(title)) {
-				post.setTitle(title);
-			}
-			//文章
-			String content = item.getStr("description");
-			if (StringUtils.isNotBlank(content)) {
-				post.setContent(doStr(content));
-			}
-			//标签
-			JSONArray tags = (JSONArray) item.get("tags");
-			if (ObjectUtils.isNotEmpty(tags)) {
-				List<String> tagList = tags.toList(String.class);
-				String tagsStr = JSONUtil.toJsonStr(tagList);
-				post.setTags(tagsStr);
-			}
-			//创建人id
-//			post.setUserId(randomUserId());
-			post.setType(SearchTypeEnum.POST.getType());
-			post.setSourceUrl(sourceUrl);
-			String linkUrl = item.getStr("linkUrl");
-			post.setUrl(linkUrl);
-			postList.add(post);
+			JSONObject newItem = (JSONObject) item.get("techDocDigest");
+			if (ObjectUtil.isEmpty(newItem)) continue;
+			AggregatedSearch search = new AggregatedSearch();
+			Article article = new Article();
+
+
+			long snowflakeNextId = IdUtil.getSnowflakeNextId();
+
+			//文章标题
+			String title = newItem.getStr("title");
+			if (StringUtil.isBlank(title) || title.equals("null")) continue;
+
+			//内容
+			String content = newItem.getStr("summary");
+			if (StringUtil.isBlank(content) || content.equals("null")) continue;
+
+			// 来源
+			String articleUrl = newItem.getStr("url");
+			if (StringUtil.isBlank(articleUrl) || articleUrl.equals("null")) continue;
+
+			// 发布时间
+			String publishTime = newItem.getStr("publishTime");
+			if (StringUtil.isBlank(publishTime) || publishTime.equals("null")) continue;
+
+			article.setId(snowflakeNextId);
+			article.setTitle(title);
+			article.setContent(content);
+			article.setUrl(articleUrl);
+			article.setSourceUrl(sourceUrl);
+			article.setPublishTime(DateUtil.parse(publishTime, "yyyy-MM-dd HH:mm:ss"));
+
+
+			search.setId(snowflakeNextId);
+			search.setTitle(title);
+			search.setContent(content);
+			search.setType(SearchTypeEnum.Article.getType());
+
+
+			searches.add(search);
+			articles.add(article);
 		}
-		//3、过滤 标题、内容、标签 中包含 自我介绍的帖子
-		final String[] filterName = {"自我介绍", "实习", "秋招", "新人", "实习生"};
-		List<AggregatedSearch> aggregatedSearchList = postList.stream().filter(post -> !StringUtils.containsAny(post.getTitle(), filterName)).collect(Collectors.toList());
-		//4、入库
-		if (!this.baseMapper.saveAggregatedSearchList(aggregatedSearchList)) {
-			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "插入帖子数据失败");
+		//3、入库,使用编程式事务
+		TransactionStatus status = transactionManager.getTransaction(transactionDefinition);
+		try {
+			// 开始数据库操作
+			baseMapper.saveAggregatedSearchList(searches);
+			articleService.insertBatchArticles(articles);
+			// 提交事务
+			transactionManager.commit(status);
+		} catch (RuntimeException e) {
+			// 如果发生异常，则回滚事务
+			transactionManager.rollback(status);
+			log.error("出现异常为:{}", e);
+			throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统异常");
 		}
 	}
 
@@ -330,11 +351,12 @@ public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMap
 	 * @param first
 	 */
 	@Override
-	public void fetchPicturePassage(String searchText, long first) {
+	public void fetchPictures(String searchText, long first) {
 		String url = String.format("https://cn.bing.com/images/async?q=世界旅游胜地first=%s&mmasync=1", first);
-		if (searchText != null && !searchText.trim().isEmpty()) {
+		if (!StringUtil.isBlank(searchText) || !Objects.equals(searchText, "null")) {
 			url = String.format("https://cn.bing.com/images/async?q=%s&first=%s&mmasync=1", searchText, first);
 		}
+		String sourceUrl = URLUtil.url(url).getHost();
 		Document bingDoc = null;
 		try {
 			bingDoc = Jsoup.connect(url).get();
@@ -348,8 +370,11 @@ public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMap
 			log.error("bing-picture-html no element class .iuscp.isv");
 			return;
 		}
-		List<AggregatedSearch> pictureList = new ArrayList<>(elements.size());
+		List<AggregatedSearch> searches = new ArrayList<>(elements.size());
+		List<Picture> pictures = new ArrayList<>(elements.size());
 		for (Element element : elements) {
+			AggregatedSearch search = new AggregatedSearch();
+			Picture picture = new Picture();
 			//获取 a标签
 			Elements pic = element.select(".iusc");
 			if (CollUtil.isEmpty(pic)) {
@@ -365,24 +390,37 @@ public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMap
 			Map<String, Object> map = JSONUtil.toBean(m, Map.class);
 			//获取图片url
 			String picUrl = (String) map.get("turl");
+			if (StringUtil.isBlank(picUrl) || picUrl.equals("null")) continue;
 			Elements inflnk = element.select(".inflnk");
 			//获取标题
 			String picTitle = inflnk.attr("aria-label");
-			//获取来源
-			String sourceUrl = (String) map.get("purl");
-			AggregatedSearch picture = new AggregatedSearch();
+			if (StringUtil.isBlank(picTitle) || picTitle.equals("null")) continue;
+			long snowflakeNextId = IdUtil.getSnowflakeNextId();
 			picture.setUrl(picUrl);
 			picture.setTitle(picTitle);
 			picture.setSourceUrl(sourceUrl);
-			picture.setType(SearchTypeEnum.PICTURE.getType());
+			picture.setId(snowflakeNextId);
+			search.setType(SearchTypeEnum.PICTURE.getType());
+			search.setId(snowflakeNextId);
+			search.setTitle(picTitle);
 			log.info("bing-picture-data url = {} title = {} source = {}", picUrl, picTitle, sourceUrl);
-			pictureList.add(picture);
+			pictures.add(picture);
+			searches.add(search);
 		}
-		//过滤 图片 标题、url 为空的数据
-		List<AggregatedSearch> filterPictureList = pictureList.stream().filter(picture -> StringUtils.isNotBlank(picture.getTitle()) || StringUtils.isNotBlank(picture.getUrl())).collect(Collectors.toList());
-		//入库
-		if (!this.baseMapper.saveAggregatedSearchList(filterPictureList)) {
-			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "插入图片数据失败");
+
+		//3、入库,使用编程式事务
+		TransactionStatus status = transactionManager.getTransaction(transactionDefinition);
+		try {
+			// 开始数据库操作
+			baseMapper.saveAggregatedSearchList(searches);
+			pictureService.insertBatchPictures(pictures);
+			// 提交事务
+			transactionManager.commit(status);
+		} catch (RuntimeException e) {
+			// 如果发生异常，则回滚事务
+			transactionManager.rollback(status);
+			log.error("出现异常为:{}", e);
+			throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统异常");
 		}
 	}
 
@@ -393,63 +431,88 @@ public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMap
 	 * @param first
 	 */
 	@Override
-	public void fetchVideoPassage(String searchText, long first) {
-		String url = String.format("https://cn.bing.com/videos/async/rankedans?q=%s&mmasync=1&first=%s&varh=VideoResultInfiniteScroll&vdpp=VideoResultAsync",
-				"视频", first);
-		if (searchText != null && !searchText.trim().isEmpty()) {
-			url = String.format("https://cn.bing.com/videos/async/rankedans?q=%s&mmasync=1&first=%s&varh=VideoResultInfiniteScroll&vdpp=VideoResultAsync",
-					searchText, first);
+	public void fetchVideos(String searchText, long first) {
+		String url = String.format("https://kaifa.baidu.com/rest/v1/search?wd=elasticsearch&paramList=page_num=%s,page_size=12,resource_type=VIDEO&pageNum=%s&pageSize=10", first, first);
+		if (!StringUtil.isBlank(searchText) || !Objects.equals(searchText, "null")) {
+			url = String.format("https://kaifa.baidu.com/rest/v1/search?wd=%s&paramList=page_num=%s,page_size=12,resource_type=VIDEO&pageNum=%s&pageSize=10", searchText, first, first);
 		}
-		Document bingDoc = null;
-		try {
-			bingDoc = Jsoup.connect(url).get();
-		} catch (IOException e) {
-			log.error("bing-video api error ={}", e.getMessage());
-			throw new BusinessException(ErrorCode.PARAMS_ERROR, "数据获取异常");
-		}
-		Elements elements = bingDoc.select(".mm_vdcv_cnt .mc_fgvc");
-		if (CollUtil.isEmpty(elements)) {
-			log.error("bing-video-html no element class .mc_vtvc_con_rc");
+		String res = HttpRequest.get(url).execute().body();
+		String sourceUrl = URLUtil.url(url).getHost();
+		//2、处理数据
+		if (StringUtils.isBlank(res)) {
+			log.error("code-nav.cn /api/post/search/page/vo res is null res = {}", res);
 			return;
 		}
-		List<AggregatedSearch> videoList = new ArrayList<>(elements.size());
-		for (Element element : elements) {
-			//视频封面
-			String ourl = element.attr("vscm");
-			Map<String, Object> ourlMap = JSONUtil.toBean(ourl, Map.class);
-			String videoCover = (String) ourlMap.get("turl");
-			//获取 .vrhdata 元素（视频数据）
-			Elements pic = element.select(".vrhdata");
-			if (CollUtil.isEmpty(pic)) {
-				log.error("bing-video-html no element class .vrhdata");
-				continue;
-			}
-
-			// vrhm 视频数据
-			String vrhm = pic.attr("vrhm");
-			if (StringUtils.isBlank(vrhm)) {
-				log.error("bing-video-html vrhm property is null");
-				continue;
-			}
-			Map<String, Object> map = JSONUtil.toBean(vrhm, Map.class);
-			//视频url
-			String videoUrl = (String) map.get("murl");
-			//视频标题
-			String videoTitle = (String) map.get("vt");
-
-			AggregatedSearch video = new AggregatedSearch();
-			video.setUrl(videoUrl);
-			video.setTitle(videoTitle);
-			video.setCover(videoCover);
-			video.setType(SearchTypeEnum.VIDEO.getType());
-			log.info("bing-video-data url = {} title = {} cover = {}", videoUrl, videoTitle, videoCover);
-			videoList.add(video);
+		Map<String, Object> dataMap = JSONUtil.toBean(res, Map.class);
+		String urlStatus = (String) dataMap.get("status");
+		if (StringUtil.isBlank(urlStatus)) {
+			log.error("code-nav.cn /api/post/search/page/vo 接口调用失败 code = {}", urlStatus);
+			return;
 		}
-		//过滤 视频 标题、url 为空的数据
-		List<AggregatedSearch> filterVideoList = videoList.stream().filter(picture -> StringUtils.isNotBlank(picture.getTitle()) || StringUtils.isNotBlank(picture.getUrl())).collect(Collectors.toList());
-		//入库
-		if (!this.baseMapper.saveAggregatedSearchList(filterVideoList)) {
-			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "插入视频数据失败");
+		JSONObject data = (JSONObject) dataMap.get("data");
+		if (ObjectUtils.isEmpty(data)) {
+			log.error("code-nav.cn /api/post/search/page/vo data is null data = {}", data);
+			return;
+		}
+		JSONObject documents = (JSONObject) data.get("documents");
+		if (ObjectUtils.isEmpty(documents)) {
+			log.error("code-nav.cn /api/post/search/page/vo documents is null records = {}", documents);
+			return;
+		}
+
+		JSONArray records = (JSONArray) documents.get("data");
+		if (ObjectUtils.isEmpty(records)) {
+			log.error("code-nav.cn /api/post/search/page/vo records is null records = {}", records);
+			return;
+		}
+
+		List<AggregatedSearch> searches = new ArrayList<>(records.size());
+		List<Video> videos = new ArrayList<>(records.size());
+		//处理视频数据
+		for (Object itemData : records) {
+			JSONObject item = (JSONObject) itemData;
+			JSONObject newItem = (JSONObject) item.get("techDocDigest");
+			if (ObjectUtil.isEmpty(newItem)) continue;
+			AggregatedSearch search = new AggregatedSearch();
+			Video video = new Video();
+
+			long snowflakeNextId = IdUtil.getSnowflakeNextId();
+			search.setId(snowflakeNextId);
+			video.setId(snowflakeNextId);
+
+			//视频标题
+			String title = newItem.getStr("title");
+			if (StringUtil.isBlank(title) || title.equals("null")) continue;
+			search.setTitle(title);
+			video.setTitle(title);
+			//封面
+			String keywords = (String) newItem.get("subKeywords");
+			if (ObjectUtil.isEmpty(keywords)) continue;
+			List<String> keyList = JSONUtil.toList(keywords, String.class);
+			Map<String, Object> keyMap = JSONUtil.toBean(keyList.get(0), Map.class);
+			String cover = (String) keyMap.get("value");
+			String videoUrl = newItem.getStr("url");
+			video.setUrl(videoUrl);
+			video.setCover(cover);
+			video.setSourceUrl(sourceUrl);
+
+			search.setType(SearchTypeEnum.VIDEO.getType());
+			searches.add(search);
+			videos.add(video);
+		}
+		//3、入库,使用编程式事务
+		TransactionStatus status = transactionManager.getTransaction(transactionDefinition);
+		try {
+			// 开始数据库操作
+			baseMapper.saveAggregatedSearchList(searches);
+			videoService.insertBatchVideos(videos);
+			// 提交事务
+			transactionManager.commit(status);
+		} catch (RuntimeException e) {
+			// 如果发生异常，则回滚事务
+			transactionManager.rollback(status);
+			log.error("出现异常为:{}", e);
+			throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统异常");
 		}
 	}
 
@@ -458,13 +521,6 @@ public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMap
 
 	}
 
-	/**
-	 * 随机id
-	 */
-	private long randomUserId() {
-		List<Long> userIdList = Arrays.asList(1660114534028922883L, 1660114534028922884L, 1660114534028922885L, 1660114534028922886L, 1660114534028922887L, 1660114534028922888L, 1660114534028922889L, 1660114534028922890L, 1660114534028922891L, 1660114534028922892L);
-		return RandomUtil.randomEleList(userIdList, 1).get(0);
-	}
 
 	/**
 	 * 解析 markdown 文档转为文本

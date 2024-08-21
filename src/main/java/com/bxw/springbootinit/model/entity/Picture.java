@@ -1,8 +1,13 @@
 package com.bxw.springbootinit.model.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * ClassName:Picture
@@ -14,19 +19,34 @@ import java.io.Serializable;
  * @Version 1.0
  */
 
+@TableName(value = "picture")
 @Data
 public class Picture implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * id
+	 */
+	@TableId(value = "id", type = IdType.AUTO)
+	private Long id;
+
 	private String title;
 
-	// 图片原始地址
+	private String url;
+
+	private String sourceUrl;
+
+	private Date createTime;
+
+	private Date updateTime;
+
+	@TableField(exist = false)
 	private String murl;
 
-	// 链接地址
+	@TableField(exist = false)
 	private String purl;
 
-	// 压缩图片地址
+	@TableField(exist = false)
 	private String turl;
 }

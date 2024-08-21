@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 public class AggregatedSearchVO implements Serializable {
 
-    private static final long serialVersionUID = -5603646150822509988L;
+    private static final long serialVersionUID = 1L;
 
     /**
      * id
@@ -27,20 +27,6 @@ public class AggregatedSearchVO implements Serializable {
      */
     private String title;
 
-    /**
-     * url
-     */
-    private String url;
-
-    /**
-     * 来源
-     */
-    private String sourceUrl;
-
-    /**
-     * 封面
-     */
-    private String cover;
 
     /**
      * 内容
@@ -48,24 +34,10 @@ public class AggregatedSearchVO implements Serializable {
     private String content;
 
     /**
-     * 标签列表 json
-     */
-    private List<String> tags;
-
-    /**
      * 类型[1:帖子 2:图片 3:视频 4:用户]
      */
     private int type;
 
-    /**
-     * 创建人id
-     */
-    private Long userId;
-
-    /**
-     * 用户
-     */
-    private UserVO user;
 
     /**
      * 创建时间

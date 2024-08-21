@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * @Version 1.0
  */
 public enum SearchTypeEnum {
-	POST("文章", "post", 1),
+	Article("文章", "article", 1),
 	PICTURE("图片", "picture", 2),
 	USER("用户", "user", 3),
 	VIDEO("视频", "video", 4);

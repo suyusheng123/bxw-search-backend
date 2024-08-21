@@ -43,6 +43,9 @@ public class AggretedSeachTest {
 	@Resource
 	private ElasticsearchRestTemplate elasticsearchRestTemplate;
 
+	@Resource
+	private AggregatedSearchService aggregatedSearchService;
+
 	@Test
 	public void testSearchAll() {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().build();
@@ -75,13 +78,33 @@ public class AggretedSeachTest {
 			String s = cover + "&dpr=1.3";
 			video.setTitle(title);
 			video.setUrl(videoUrl);
-			video.setTime(time);
 			video.setCover(s);
 			videoList.add(video);
 		}
 		System.out.println(videoList);
 		// json转对象
 //		Map<String, Object> map = JSONUtil.toBean(result, Map.class);
+	}
+
+	@Test
+	public void testFetchArticles(){
+	    String text = "猴子";
+		long current = 1L;
+		aggregatedSearchService.fetchArticles(text,current);
+	}
+
+	@Test
+	public void testFetchPictures(){
+		String text = "小黑子";
+		long first = 1;
+		aggregatedSearchService.fetchPictures(text,1);
+	}
+
+	@Test
+	public void testFetchVideos(){
+		String text = "ssm";
+		long first = 2;
+		aggregatedSearchService.fetchVideos(text,first);
 	}
 
 }

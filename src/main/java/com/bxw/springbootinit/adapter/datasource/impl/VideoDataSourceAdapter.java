@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 
 @Component
-public class VideoDataSourceAdapter implements DataSource<Video> {
+public class VideoDataSourceAdapter implements DataSource {
 
 	@Resource
 	private VideoService videoService;
@@ -49,7 +49,6 @@ public class VideoDataSourceAdapter implements DataSource<Video> {
 
 	@Override
 	public void doSearch(String searchText,long current,long currentSize) {
-		long first = (current - 1) * currentSize + 35;
-		aggregatedSearchService.fetchVideoPassage(searchText,first);
+		aggregatedSearchService.fetchVideos(searchText,current);
 	}
 }
