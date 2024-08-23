@@ -4,11 +4,14 @@ package com.bxw.springbootinit.adapter.datasource.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bxw.springbootinit.adapter.datasource.DataSource;
 import com.bxw.springbootinit.model.entity.Picture;
+import com.bxw.springbootinit.model.vo.PictureVO;
 import com.bxw.springbootinit.service.AggregatedSearchService;
 import com.bxw.springbootinit.service.PictureService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ClassName:DataSourceAdapter
@@ -23,6 +26,9 @@ import javax.annotation.Resource;
 @Component
 public class PictureDataSourceAdapter implements DataSource {
 
+	@Resource
+	private PictureService pictureService;
+
 
 	@Resource
 	private AggregatedSearchService aggregatedSearchService;
@@ -33,8 +39,25 @@ public class PictureDataSourceAdapter implements DataSource {
 	 * @param searchText 搜索词
 	 */
 	@Override
-	public void doSearch(String searchText,long current,long currentSize){
-		long first = (current - 1) * currentSize + 10;
-		aggregatedSearchService.fetchPictures(searchText,first);
+	public List<PictureVO> doSearch(String searchText, long current, long currentSize){
+		long first = (current - 1) * currentSize + 40;
+		return aggregatedSearchService.fetchPictures(searchText,first).stream().map(picture -> {
+			PictureVO pictureVO = new PictureVO();
+			pictureVO.setId(picture.getId());
+			pictureVO.setTitle(picture.getTitle());
+			pictureVO.setUrl(picture.getUrl());
+            return pictureVO;
+		}).collect(Collectors.toList());
+	}
+
+
+	/**
+	 * 根据标题查询
+	 * @param context
+	 * @return
+	 */
+	@Override
+	public List<?> searchListByTitle(String context) {
+	   return pictureService.searchListByTitle(context);
 	}
 }

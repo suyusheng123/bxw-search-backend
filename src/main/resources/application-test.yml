@@ -1,25 +1,30 @@
-# 测试配置文件
-server:
-  port: 8101
 spring:
   # 数据库配置
-  # todo 需替换配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/my_db
     username: root
     password: 123456
   # Redis 配置
-  # todo 需替换配置
   redis:
     database: 1
     host: localhost
     port: 6379
     timeout: 5000
-    password: 123456
+    password:
   # Elasticsearch 配置
-  # todo 需替换配置
   elasticsearch:
     uris: http://localhost:9200
-    username: root
-    password: 123456
+    socket-timeout: 60s
+    connection-timeout: 5s
+  # mq配置
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+#接口文档
+knife4j:
+  # 开启生产环境屏蔽
+  production: false

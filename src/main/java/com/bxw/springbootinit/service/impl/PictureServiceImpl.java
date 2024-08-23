@@ -49,21 +49,18 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper,Picture>implem
 		return this.baseMapper.savePicture(pictures);
 	}
 
+	/**
+	 * 根据标题查询
+	 * @param title
+	 * @return
+	 */
 	@Override
-	public Page<PictureVO> searchPictureList(List<String> title, long current, long pageSize) {
-		Page<Picture> page = new Page<>(current,pageSize);
-		QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
-		queryWrapper.in("title",title);
-		queryWrapper.orderByDesc("updateTime");
-		page = this.page(page,queryWrapper);
-		Page<PictureVO> newPage = new Page<>();
-		BeanUtils.copyProperties(page,newPage,"records");
-		List<PictureVO> pictureVOList = page.getRecords().stream().map(picture -> {
-			PictureVO pictureVO = new PictureVO();
-			BeanUtils.copyProperties(picture,pictureVO);
-			return pictureVO;
-		}).collect(Collectors.toList());
-		newPage.setRecords(pictureVOList);
-		return newPage;
+	public List<PictureVO> searchListByTitle(String title) {
+		return this.baseMapper.searchList(title);
+	}
+
+	@Override
+	public List<PictureVO> searchPictureList(List<Long> id) {
+		return this.baseMapper.searchListFromEs(id);
 	}
 }

@@ -1,23 +1,15 @@
 package com.bxw.springbootinit.adapter.datasource.impl;
 
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bxw.springbootinit.adapter.datasource.DataSource;
-import com.bxw.springbootinit.model.dto.post.PostQueryRequest;
-import com.bxw.springbootinit.model.entity.AggregatedSearch;
-import com.bxw.springbootinit.model.entity.Post;
-import com.bxw.springbootinit.model.entity.Video;
-import com.bxw.springbootinit.model.vo.PostVO;
+import com.bxw.springbootinit.model.vo.VideoVO;
 import com.bxw.springbootinit.service.AggregatedSearchService;
-import com.bxw.springbootinit.service.PostService;
 import com.bxw.springbootinit.service.VideoService;
-import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ClassName:DataSourceAdapter
@@ -38,17 +30,27 @@ public class VideoDataSourceAdapter implements DataSource {
 	@Resource
 	private AggregatedSearchService aggregatedSearchService;
 
-//	@Override
-//	public Page< doSearch(String searchText, long current, long size) {
-//		Page<Video> videoPage = videoService.searchVideoPageList(searchText, current, size);
-//		if (ObjectUtils.isEmpty(videoPage)) {
-//			return new Page<>(current, size);
-//		}
-//		return videoPage;
-//	}
 
 	@Override
-	public void doSearch(String searchText,long current,long currentSize) {
-		aggregatedSearchService.fetchVideos(searchText,current);
+	public List<VideoVO> doSearch(String searchText, long current, long currentSize) {
+		return aggregatedSearchService.fetchVideos(searchText,current).stream()
+				.map(video -> {
+					VideoVO videoVO = new VideoVO();
+					videoVO.setId(video.getId());
+					videoVO.setTitle(video.getTitle());
+					videoVO.setUrl(video.getUrl());
+					videoVO.setCover(video.getCover());
+                    return videoVO;
+				}).collect(Collectors.toList());
+	}
+
+	/**
+	 * 根据标题查询
+	 * @param context
+	 * @return
+	 */
+	@Override
+	public List<?> searchListByTitle(String context) {
+		return videoService.searchListByTitle(context);
 	}
 }

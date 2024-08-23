@@ -9,6 +9,7 @@ import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 
@@ -42,14 +43,12 @@ public class AggregatedSearchVO implements Serializable {
     /**
      * 创建时间
      */
-    @JsonFormat(pattern = DatePattern.NORM_DATETIME_PATTERN)
-    private LocalDateTime createTime;
+    private String createTime;
 
     /**
      * 修改时间
      */
-    @JsonFormat(pattern = DatePattern.NORM_DATETIME_PATTERN)
-    private LocalDateTime updateTime;
+    private String updateTime;
 
     private static final Gson GSON = new Gson();
 

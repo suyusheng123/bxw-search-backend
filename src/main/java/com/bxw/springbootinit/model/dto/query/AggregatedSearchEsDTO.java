@@ -28,7 +28,7 @@ public class AggregatedSearchEsDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
+    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     @Id
     private Long id;
@@ -61,13 +61,13 @@ public class AggregatedSearchEsDTO implements Serializable {
      * 创建时间
      */
     @Field(index = false, store = true, type = FieldType.Date, format = {}, pattern = DATE_TIME_PATTERN)
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 更新时间
      */
     @Field(index = false, store = true, type = FieldType.Date, format = {}, pattern = DATE_TIME_PATTERN)
-    private Date updateTime;
+    private LocalDateTime updateTime;
 
 
     private static final Gson GSON = new Gson();

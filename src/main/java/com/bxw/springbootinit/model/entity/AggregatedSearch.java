@@ -1,10 +1,13 @@
 package com.bxw.springbootinit.model.entity;
 
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * aggregated_search
@@ -43,12 +46,12 @@ public class AggregatedSearch implements Serializable {
 	/**
 	 * 创建时间
 	 */
-	private LocalDateTime createTime;
+	private String createTime;
 
 	/**
 	 * 更新时间
 	 */
-	private LocalDateTime updateTime;
+	private String updateTime;
 
 
 	public static final String TITLE = "title";

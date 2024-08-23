@@ -3,11 +3,13 @@ package com.bxw.springbootinit.model.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.Value;
 
 import java.io.Serializable;
 import java.sql.Time;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -52,12 +54,12 @@ public class Video implements Serializable {
 	/**
 	 * 创建时间
 	 */
-	private Date createTime;
+	private String createTime;
 
 	/**
 	 * 更新时间
 	 */
-	private Date updateTime;
+	private String updateTime;
 
 
 }

@@ -10,24 +10,21 @@ import java.util.stream.Collectors;
 /**
  * ClassName: SearchTypeEnum
  * Description:
- * 数据源枚举类
+ * mq同步Redis和mysql枚举类
  * @Author 坤坤学🐸
  * @Create 2024/8/20 13:45
  * @Version 1.0
  */
-public enum SearchTypeEnum {
-	Article("文章", "article", 1),
-	PICTURE("图片", "picture", 2),
-	VIDEO("视频", "video", 3);
+public enum OperationTypeEnum {
+	REDIS("redis", 1),
+	MYSQL("mysql", 2);
 
-	private final String text;
 
 	private final String value;
 
 	private final Integer type;
 
-	SearchTypeEnum(String text, String value, Integer type) {
-		this.text = text;
+	OperationTypeEnum(String value, Integer type) {
 		this.value = value;
 		this.type = type;
 	}
@@ -47,11 +44,11 @@ public enum SearchTypeEnum {
 	 * @param value
 	 * @return
 	 */
-	public static SearchTypeEnum getEnumByValue(String value) {
+	public static OperationTypeEnum getEnumByValue(String value) {
 		if (ObjectUtils.isEmpty(value)) {
 			return null;
 		}
-		for (SearchTypeEnum anEnum : SearchTypeEnum.values()) {
+		for (OperationTypeEnum anEnum : OperationTypeEnum.values()) {
 			if (anEnum.value.equals(value)) {
 				return anEnum;
 			}
@@ -60,11 +57,11 @@ public enum SearchTypeEnum {
 	}
 
 
-	public static SearchTypeEnum getEnumByType(Integer value) {
+	public static OperationTypeEnum getEnumByType(Integer value) {
 		if (ObjectUtils.isEmpty(value)) {
 			return null;
 		}
-		for (SearchTypeEnum anEnum : SearchTypeEnum.values()) {
+		for (OperationTypeEnum anEnum : OperationTypeEnum.values()) {
 			if (anEnum.getType().intValue() == value.intValue()) {
 				return anEnum;
 			}
@@ -72,11 +69,11 @@ public enum SearchTypeEnum {
 		return null;
 	}
 
-	public static SearchTypeEnum getEnumByValueAndType(String value, Integer type) {
+	public static OperationTypeEnum getEnumByValueAndType(String value, Integer type) {
 		if (StringUtils.isBlank(value) || type <= 0) {
 			return null;
 		}
-		for (SearchTypeEnum anEnum : SearchTypeEnum.values()) {
+		for (OperationTypeEnum anEnum : OperationTypeEnum.values()) {
 			if (anEnum.getValue().equals(value) && anEnum.getType().intValue() == type.intValue()) {
 				return anEnum;
 			}
@@ -86,10 +83,6 @@ public enum SearchTypeEnum {
 
 	public String getValue() {
 		return value;
-	}
-
-	public String getText() {
-		return text;
 	}
 
 	public Integer getType() {

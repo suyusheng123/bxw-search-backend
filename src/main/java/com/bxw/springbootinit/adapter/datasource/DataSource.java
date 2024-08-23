@@ -3,6 +3,8 @@ package com.bxw.springbootinit.adapter.datasource;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bxw.springbootinit.model.vo.SearchVO;
 
+import java.util.List;
+
 /**
  * ClassName:DataSource
  * Package:com.bxw.springbootinit.datasource
@@ -14,12 +16,17 @@ import com.bxw.springbootinit.model.vo.SearchVO;
  */
 public interface DataSource {
 
-//	Page<T> doSearch(String searchText, long current, long pageSize);
 
 	/**
-	 * 爬取数据并入库
+	 * 爬取数据并入库并返回值
 	 *
 	 * @param searchText 搜索词
 	 */
-	void doSearch(String searchText,long current,long currentSize);
+	List<?> doSearch(String searchText,long current,long currentSize);
+
+	/**
+	 * 根据标题搜索
+	 */
+	List<?> searchListByTitle(String context);
+
 }

@@ -1,11 +1,16 @@
 package com.bxw.springbootinit.service;
 
-import co.elastic.clients.elasticsearch.sql.QueryRequest;
+
+import com.bxw.springbootinit.model.dto.query.QueryRequest;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.bxw.springbootinit.model.dto.query.SearchQueryEsRequest;
 import com.bxw.springbootinit.model.entity.AggregatedSearch;
+import com.bxw.springbootinit.model.entity.Article;
+import com.bxw.springbootinit.model.entity.Picture;
+import com.bxw.springbootinit.model.entity.Video;
 import com.bxw.springbootinit.model.vo.AggregatedSearchVO;
 import com.bxw.springbootinit.model.vo.PageResult;
+import com.bxw.springbootinit.model.vo.PictureVO;
 import com.bxw.springbootinit.model.vo.SuggestVO;
 
 import java.util.List;
@@ -47,26 +52,25 @@ public interface AggregatedSearchService extends IService<AggregatedSearch> {
 	 *
 	 * @param current 页码
 	 */
-	void fetchArticles(String searchText,long current);
+	List<Article> fetchArticles(String searchText, long current);
 
 	/**
 	 * 批量保存爬取的图片数据
 	 *
 	 * @param searchText
 	 */
-	void fetchPictures(String searchText,long first);
+	List<Picture> fetchPictures(String searchText, long first);
 
 	/**
 	 * 批量保存爬取的视频数据
 	 *
 	 * @param searchText
 	 */
-	void fetchVideos(String searchText,long first);
+	List<Video> fetchVideos(String searchText, long first);
 
 	/**
-	 * 保存搜索记录和保存爬取的数据
+	 * 批量保存爬取的数据
 	 *
-	 * @param searchQueryRequest 搜索参数
 	 */
-	void saveSearchTextAndCrawlerData(QueryRequest searchQueryRequest);
+	void saveSearchTextAndCrawlerData(List<AggregatedSearch> searches,List<?> dataList,String type);
 }

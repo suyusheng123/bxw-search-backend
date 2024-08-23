@@ -12,22 +12,26 @@ import java.util.List;
 
 /**
  * 视频服务类
- *
  */
 public interface VideoService extends IService<Video> {
-    /**
-     * 视频分页列表
-     *
-     * @param title
-     * @param current
-     * @param pageSize
-     * @return
-     */
-    Page<VideoVO> searchVideoList(List<String> title, long current, long pageSize);
+	/**
+	 * 视频分页列表
+	 *
+	 * @param id
+	 * @param current
+	 * @param pageSize
+	 * @return
+	 */
+	List<VideoVO> searchVideoList(List<Long> id);
 
-    /**
-     * 批量插入图片数据
-     */
+	/**
+	 * 批量插入图片数据
+	 */
 
-    boolean insertBatchVideos(List<Video> videos);
+	boolean insertBatchVideos(List<Video> videos);
+
+	/**
+	 * 根据标题查询
+	 */
+	List<VideoVO> searchListByTitle(String title);
 }

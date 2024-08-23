@@ -1,8 +1,11 @@
 package com.bxw.springbootinit.model.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * ClassName: ArticleVO
@@ -38,10 +41,6 @@ public class VideoVO implements Serializable {
 	 */
 	private String cover;
 
-	/**
-	 * 时长
-	 */
-	private String time;
 
 
 }

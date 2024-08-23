@@ -2,10 +2,14 @@ package com.bxw.springbootinit.adapter.datasource.impl;
 
 
 import com.bxw.springbootinit.adapter.datasource.DataSource;
+import com.bxw.springbootinit.model.vo.ArticleVO;
 import com.bxw.springbootinit.service.AggregatedSearchService;
+import com.bxw.springbootinit.service.ArticleService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ClassName:DataSourceAdapter
@@ -20,6 +24,8 @@ import javax.annotation.Resource;
 @Component
 public class ArticleDataSourceAdapter implements DataSource{
 
+	@Resource
+	private ArticleService articleService;
 
 	@Resource
 	private AggregatedSearchService aggregatedSearchService;
@@ -30,7 +36,25 @@ public class ArticleDataSourceAdapter implements DataSource{
 	 * @param searchText 搜索词
 	 */
 	@Override
-	public void doSearch(String searchText,long current,long currentSize){
-		aggregatedSearchService.fetchArticles(searchText,current);
+	public List<ArticleVO> doSearch(String searchText, long current, long currentSize){
+		return aggregatedSearchService.fetchArticles(searchText,current).stream().map(article -> {
+			ArticleVO articleVO = new ArticleVO();
+			articleVO.setId(article.getId());
+			articleVO.setTitle(article.getTitle());
+			articleVO.setUrl(article.getUrl());
+			articleVO.setContent(article.getContent());
+			articleVO.setPublishTime(article.getPublishTime());
+            return articleVO;
+		}).collect(Collectors.toList());
+	}
+
+	/**
+	 * 根据标题查询
+	 * @param context
+	 * @return
+	 */
+	@Override
+	public List<?> searchListByTitle(String context) {
+		return articleService.searchListByTitle(context);
 	}
 }

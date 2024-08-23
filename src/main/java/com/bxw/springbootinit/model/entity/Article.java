@@ -1,9 +1,11 @@
 package com.bxw.springbootinit.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -49,17 +51,17 @@ public class Article implements Serializable {
 	/**
 	 * 创建时间
 	 */
-	private Date createTime;
+	private String createTime;
 
 	/**
 	 * 更新时间
 	 */
-	private Date updateTime;
+	private String updateTime;
 
 	/**
 	 * 发布时间
 	 */
-	private Date publishTime;
+	private String publishTime;
 
 
 

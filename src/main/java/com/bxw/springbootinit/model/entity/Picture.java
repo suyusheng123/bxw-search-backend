@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -37,16 +40,7 @@ public class Picture implements Serializable {
 
 	private String sourceUrl;
 
-	private Date createTime;
+	private String createTime;
 
-	private Date updateTime;
-
-	@TableField(exist = false)
-	private String murl;
-
-	@TableField(exist = false)
-	private String purl;
-
-	@TableField(exist = false)
-	private String turl;
+	private String updateTime;
 }

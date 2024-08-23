@@ -21,17 +21,22 @@ public interface ArticleService extends IService<Article> {
 	/**
 	 * 文章分页列表
 	 *
-	 * @param title
-	 * @param current
-	 * @param pageSize
+	 * @param id
 	 * @return
 	 */
-	Page<ArticleVO> searchArticleList(List<String> title, long current, long pageSize);
+	List<ArticleVO> searchArticleList(List<Long> id);
 
 	/**
 	 * 批量插入文章数据
 	 */
 
 	boolean insertBatchArticles(List<Article> articles);
+
+
+	/**
+	 * 根据标题查询
+	 */
+
+	List<ArticleVO> searchListByTitle(String title);
 
 }

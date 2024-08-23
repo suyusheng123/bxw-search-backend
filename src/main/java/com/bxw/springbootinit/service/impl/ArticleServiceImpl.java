@@ -30,32 +30,35 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
 	/**
 	 * 文章分页列表
-	 * @param title
-	 * @param current
-	 * @param pageSize
+	 * @param
 	 * @return
 	 */
 	@Override
-	public Page<ArticleVO> searchArticleList(List<String> title, long current, long pageSize) {
-		Page<Article> page = new Page<>(current,pageSize);
-		QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
-		queryWrapper.in("title",title);
-		queryWrapper.orderByDesc("updateTime");
-		page = this.page(page,queryWrapper);
-		Page<ArticleVO> newPage = new Page<>();
-		BeanUtils.copyProperties(page,newPage,"records");
-		List<ArticleVO> articleVOList = page.getRecords().stream().map(article -> {
-			ArticleVO articleVO = new ArticleVO();
-			BeanUtils.copyProperties(article,articleVO);
-			return articleVO;
+	public List<ArticleVO> searchArticleList(List<Long> id) {
+		List<ArticleVO> articleVOS = this.baseMapper.searchListFromEs(id);
+		return articleVOS.stream().sorted((article1, article2) -> {
+			// 降序
+			return article2.getPublishTime().compareTo(article1.getPublishTime());
 		}).collect(Collectors.toList());
-		newPage.setRecords(articleVOList);
-		return newPage;
 	}
 
 
 	@Override
 	public boolean insertBatchArticles(List<Article> articles) {
 		return this.baseMapper.saveArticle(articles);
+	}
+
+	/**
+	 * 根据标题查询
+	 * @param title
+	 * @return
+	 */
+	@Override
+	public List<ArticleVO> searchListByTitle(String title) {
+		List<ArticleVO> articleVOS = this.baseMapper.searchList(title);
+		return articleVOS.stream().sorted((article1, article2) -> {
+			// 降序
+			return article2.getPublishTime().compareTo(article1.getPublishTime());
+		}).collect(Collectors.toList());
 	}
 }

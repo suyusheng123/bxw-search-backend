@@ -20,7 +20,10 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 
 import javax.annotation.Resource;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -96,8 +99,8 @@ public class AggretedSeachTest {
 	@Test
 	public void testFetchPictures(){
 		String text = "小黑子";
-		long first = 1;
-		aggregatedSearchService.fetchPictures(text,1);
+		long first = 40;
+		aggregatedSearchService.fetchPictures(text,40);
 	}
 
 	@Test
@@ -105,6 +108,18 @@ public class AggretedSeachTest {
 		String text = "ssm";
 		long first = 2;
 		aggregatedSearchService.fetchVideos(text,first);
+	}
+
+	@Test
+	public void testAggregatedSearch(){
+	    SearchQueryEsRequest searchQueryEsRequest = new SearchQueryEsRequest();
+	    searchQueryEsRequest.setSearchText("elasticsearch");
+	    searchQueryEsRequest.setType(1);
+	    searchQueryEsRequest.setSortField("updateTime");
+	    searchQueryEsRequest.setSortOrder("desc");
+
+		aggregatedSearchService.aggregatedSearchEs(searchQueryEsRequest);
+
 	}
 
 }

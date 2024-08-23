@@ -11,6 +11,7 @@ import com.bxw.springbootinit.mapper.VideoMapper;
 import com.bxw.springbootinit.model.entity.Picture;
 import com.bxw.springbootinit.model.entity.Video;
 import com.bxw.springbootinit.model.enums.SearchTypeEnum;
+import com.bxw.springbootinit.model.vo.ArticleVO;
 import com.bxw.springbootinit.model.vo.PictureVO;
 import com.bxw.springbootinit.model.vo.VideoVO;
 import com.bxw.springbootinit.service.VideoService;
@@ -40,31 +41,26 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper,Video> implements 
 
     /**
      * 查询视频列表
-     * @param title
-     * @param current
-     * @param pageSize
+     * @param id
      * @return
      */
     @Override
-    public Page<VideoVO> searchVideoList(List<String> title, long current, long pageSize) {
-        Page<Video> page = new Page<>(current,pageSize);
-        QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("title",title);
-        queryWrapper.orderByDesc("updateTime");
-        page = this.page(page,queryWrapper);
-        Page<VideoVO> newPage = new Page<>();
-        BeanUtils.copyProperties(page,newPage,"records");
-        List<VideoVO> videoVOList = page.getRecords().stream().map(video -> {
-            VideoVO videoVO = new VideoVO();
-            BeanUtils.copyProperties(video,videoVO);
-            return videoVO;
-        }).collect(Collectors.toList());
-        newPage.setRecords(videoVOList);
-        return newPage;
+    public List<VideoVO> searchVideoList(List<Long> id) {
+        return this.baseMapper.searchListFromEs(id);
     }
 
     @Override
     public boolean insertBatchVideos(List<Video> videos) {
         return this.baseMapper.saveVideo(videos);
     }
+
+	/**
+	 * 根据标题查询
+	 * @param title
+	 * @return
+	 */
+	@Override
+	public List<VideoVO> searchListByTitle(String title) {
+		return this.baseMapper.searchList(title);
+	}
 }

@@ -19,16 +19,19 @@ public interface PictureService extends IService<Picture> {
     /**
      * 图片分页列表
      *
-     * @param title
-     * @param current
-     * @param pageSize
+     * @param id
      * @return
      */
-    Page<PictureVO> searchPictureList(List<String> title, long current, long pageSize);
+    List<PictureVO> searchPictureList(List<Long> id);
 
     /**
      * 批量插入图片数据
      */
 
     boolean insertBatchPictures(List<Picture> pictures);
+
+    /**
+     * 根据标题查询
+     */
+    List<PictureVO> searchListByTitle(String title);
 }

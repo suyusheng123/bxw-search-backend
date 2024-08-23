@@ -49,8 +49,9 @@ public class ArticleVO implements Serializable {
 
 
 	/**
-	 * 发布时间
+	 * 发布时间(格式化)
 	 */
-	private Date publishTime;
+	private String publishTime;
+
 
 }

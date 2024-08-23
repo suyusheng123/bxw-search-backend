@@ -24,7 +24,7 @@ import java.util.Map;
 public class DataSourceRegistry {
 
 	@Resource
-	private ArticleDataSourceAdapter postDataSourceAdapter;
+	private ArticleDataSourceAdapter articleDataSourceAdapter;
 
 	@Resource
 	private PictureDataSourceAdapter pictureDataSourceAdapter;
@@ -36,7 +36,7 @@ public class DataSourceRegistry {
 
 	@PostConstruct
 	public void doInit() {
-		dataSources.put("post",postDataSourceAdapter);
+		dataSources.put("article",articleDataSourceAdapter);
 		dataSources.put("picture",pictureDataSourceAdapter);
 		dataSources.put("video",videoDataSourceAdapter);
 	}
