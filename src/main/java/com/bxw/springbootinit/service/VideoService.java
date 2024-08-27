@@ -6,6 +6,7 @@ import com.bxw.springbootinit.mapper.VideoMapper;
 import com.bxw.springbootinit.model.entity.Picture;
 import com.bxw.springbootinit.model.entity.Video;
 import com.bxw.springbootinit.model.vo.PictureVO;
+import com.bxw.springbootinit.model.vo.SearchVO;
 import com.bxw.springbootinit.model.vo.VideoVO;
 
 import java.util.List;
@@ -18,8 +19,6 @@ public interface VideoService extends IService<Video> {
 	 * 视频分页列表
 	 *
 	 * @param id
-	 * @param current
-	 * @param pageSize
 	 * @return
 	 */
 	List<VideoVO> searchVideoList(List<Long> id);
@@ -33,5 +32,5 @@ public interface VideoService extends IService<Video> {
 	/**
 	 * 根据标题查询
 	 */
-	List<VideoVO> searchListByTitle(String title);
+	SearchVO searchListByTitle(String title,Long offset);
 }

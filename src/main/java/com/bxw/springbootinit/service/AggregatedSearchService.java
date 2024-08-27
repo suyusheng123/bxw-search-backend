@@ -8,10 +8,7 @@ import com.bxw.springbootinit.model.entity.AggregatedSearch;
 import com.bxw.springbootinit.model.entity.Article;
 import com.bxw.springbootinit.model.entity.Picture;
 import com.bxw.springbootinit.model.entity.Video;
-import com.bxw.springbootinit.model.vo.AggregatedSearchVO;
-import com.bxw.springbootinit.model.vo.PageResult;
-import com.bxw.springbootinit.model.vo.PictureVO;
-import com.bxw.springbootinit.model.vo.SuggestVO;
+import com.bxw.springbootinit.model.vo.*;
 
 import java.util.List;
 
@@ -30,14 +27,8 @@ public interface AggregatedSearchService extends IService<AggregatedSearch> {
 	 *
 	 * @param search 查询条件
 	 */
-	List<AggregatedSearchVO> aggregatedSearchEs(SearchQueryEsRequest search);
+	SearchVO aggregatedSearchEs(SearchQueryEsRequest search);
 
-	/**
-	 * es 搜索
-	 *
-	 * @param request 查询条件
-	 */
-	PageResult aggregatedSearchEsPageList(SearchQueryEsRequest request);
 
 	/**
 	 * 搜索建议
@@ -52,21 +43,21 @@ public interface AggregatedSearchService extends IService<AggregatedSearch> {
 	 *
 	 * @param current 页码
 	 */
-	List<Article> fetchArticles(String searchText, long current);
+	SearchVO fetchArticles(String searchText, long current);
 
 	/**
 	 * 批量保存爬取的图片数据
 	 *
 	 * @param searchText
 	 */
-	List<Picture> fetchPictures(String searchText, long first);
+	SearchVO fetchPictures(String searchText, long first);
 
 	/**
 	 * 批量保存爬取的视频数据
 	 *
 	 * @param searchText
 	 */
-	List<Video> fetchVideos(String searchText, long first);
+	SearchVO fetchVideos(String searchText, long first);
 
 	/**
 	 * 批量保存爬取的数据

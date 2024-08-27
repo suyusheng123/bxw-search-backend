@@ -12,20 +12,21 @@
         <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
         <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
         <result property="cover" column="cover" jdbcType="VARCHAR"/>
+        <result property="videoTitleId" column="videoTitleId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,title,url,sourceUrl,
-        cover,createTime,updateTime
+        cover,videoTitleId,createTime,updateTime
     </sql>
 
     <insert id="saveVideo">
-        INSERT INTO video (id, title, url, sourceUrl, cover)
+        INSERT INTO video (id, title, url, sourceUrl, cover,videoTitleId)
         VALUES
         <foreach collection="searchList" item="search" separator=",">
             (
             #{search.id},#{search.title},#{search.url},#{search.sourceUrl},
-            #{search.cover}
+            #{search.cover},#{search.videoTitleId}
             )
         </foreach>
         ON DUPLICATE KEY UPDATE

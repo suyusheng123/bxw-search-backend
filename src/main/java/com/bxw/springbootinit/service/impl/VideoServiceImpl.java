@@ -13,6 +13,7 @@ import com.bxw.springbootinit.model.entity.Video;
 import com.bxw.springbootinit.model.enums.SearchTypeEnum;
 import com.bxw.springbootinit.model.vo.ArticleVO;
 import com.bxw.springbootinit.model.vo.PictureVO;
+import com.bxw.springbootinit.model.vo.SearchVO;
 import com.bxw.springbootinit.model.vo.VideoVO;
 import com.bxw.springbootinit.service.VideoService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,35 +33,41 @@ import java.util.stream.Collectors;
 
 /**
  * 视频服务类实现
- *
  */
 @Slf4j
 @Service
-public class VideoServiceImpl extends ServiceImpl<VideoMapper,Video> implements VideoService {
+public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements VideoService {
 
 
-    /**
-     * 查询视频列表
-     * @param id
-     * @return
-     */
-    @Override
-    public List<VideoVO> searchVideoList(List<Long> id) {
-        return this.baseMapper.searchListFromEs(id);
-    }
+	/**
+	 * 查询视频列表
+	 *
+	 * @param id
+	 * @return
+	 */
+	@Override
+	public List<VideoVO> searchVideoList(List<Long> id) {
+		return this.baseMapper.searchListFromEs(id);
+	}
 
-    @Override
-    public boolean insertBatchVideos(List<Video> videos) {
-        return this.baseMapper.saveVideo(videos);
-    }
+	@Override
+	public boolean insertBatchVideos(List<Video> videos) {
+		return this.baseMapper.saveVideo(videos);
+	}
 
 	/**
 	 * 根据标题查询
+	 *
 	 * @param title
 	 * @return
 	 */
 	@Override
-	public List<VideoVO> searchListByTitle(String title) {
-		return this.baseMapper.searchList(title);
+	public SearchVO searchListByTitle(String title, Long offset) {
+		Long total = this.baseMapper.searchListCount(title);
+		List<VideoVO> videoVOS = this.baseMapper.searchList(title, offset);
+		SearchVO searchVO = new SearchVO();
+		searchVO.setDataList(videoVOS);
+		searchVO.setTotal(total);
+		return searchVO;
 	}
 }

@@ -5,6 +5,8 @@ import com.bxw.springbootinit.adapter.service.ServiceAdapter;
 import com.bxw.springbootinit.model.entity.Article;
 import com.bxw.springbootinit.model.entity.Picture;
 import com.bxw.springbootinit.model.vo.PictureVO;
+import com.bxw.springbootinit.model.vo.SearchVO;
+import com.bxw.springbootinit.service.AggregatedSearchService;
 import com.bxw.springbootinit.service.ArticleService;
 import com.bxw.springbootinit.service.PictureService;
 import org.springframework.stereotype.Component;
@@ -25,6 +27,7 @@ public class PictureServiceAdapter implements ServiceAdapter {
 	@Resource
 	private PictureService pictureService;
 
+
 	@Override
 	public List<PictureVO> searchDataList(List<Long> id) {
 		return pictureService.searchPictureList(id);
@@ -35,4 +38,12 @@ public class PictureServiceAdapter implements ServiceAdapter {
 		if(pictureService.insertBatchPictures((List<Picture>)dataList)) return true;
 		return false;
 	}
+
+	@Override
+	public SearchVO searchListByTitle(String title, Long current, Long size) {
+		long offset = (current - 1) * size;
+		return pictureService.searchListByTitle(title, offset);
+	}
+
+
 }

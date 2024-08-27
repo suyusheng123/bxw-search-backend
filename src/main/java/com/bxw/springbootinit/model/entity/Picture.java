@@ -43,4 +43,6 @@ public class Picture implements Serializable {
 	private String createTime;
 
 	private String updateTime;
+
+	private String pictureTitleId;
 }

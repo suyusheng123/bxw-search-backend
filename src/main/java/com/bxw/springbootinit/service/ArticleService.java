@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.bxw.springbootinit.model.entity.Article;
 import com.bxw.springbootinit.model.entity.Video;
 import com.bxw.springbootinit.model.vo.ArticleVO;
+import com.bxw.springbootinit.model.vo.SearchVO;
 
 import java.util.List;
 
@@ -37,6 +38,6 @@ public interface ArticleService extends IService<Article> {
 	 * 根据标题查询
 	 */
 
-	List<ArticleVO> searchListByTitle(String title);
+	SearchVO searchListByTitle(String title,Long offset);
 
 }

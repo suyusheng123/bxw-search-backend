@@ -18,4 +18,10 @@ public class SearchVO implements Serializable {
 
     // 添加一个统一的集合
     private List<?> dataList;
+
+    // 记录这是第几页
+    private long current;
+
+    // 记录数据是否高亮
+    private int isHighlight = 0;
 }

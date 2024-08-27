@@ -12,6 +12,7 @@ import com.bxw.springbootinit.model.entity.Article;
 import com.bxw.springbootinit.model.entity.Picture;
 import com.bxw.springbootinit.model.vo.ArticleVO;
 import com.bxw.springbootinit.model.vo.PictureVO;
+import com.bxw.springbootinit.model.vo.SearchVO;
 import com.bxw.springbootinit.service.PictureService;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -55,8 +56,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper,Picture>implem
 	 * @return
 	 */
 	@Override
-	public List<PictureVO> searchListByTitle(String title) {
-		return this.baseMapper.searchList(title);
+	public SearchVO searchListByTitle(String title,Long offset) {
+		Long total = this.baseMapper.searchListCount(title);
+		List<PictureVO> pictureVOS = this.baseMapper.searchList(title,offset);
+		SearchVO searchVO = new SearchVO();
+		searchVO.setDataList(pictureVOS);
+		searchVO.setTotal(total);
+		return searchVO;
 	}
 
 	@Override

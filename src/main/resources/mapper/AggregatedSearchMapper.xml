@@ -12,25 +12,25 @@
         <result property="type" column="type" jdbcType="TINYINT"/>
         <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
         <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="aggregatedTitleId" column="aggregatedTitleId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,title,
-        content,type,
+        content,type,aggregatedTitleId
         createTime,updateTime
     </sql>
 
     <insert id="saveAggregatedSearchList">
-        INSERT INTO aggregated_search (id,title,content,type)
+        INSERT INTO aggregated_search (id,title,content,type,aggregatedTitleId)
         VALUES
         <foreach collection="searchList" item="search" separator=",">
             (
             #{search.id},#{search.title},
-             #{search.content},#{search.type}
+             #{search.content},#{search.type},#{search.aggregatedTitleId}
             )
         </foreach>
         ON DUPLICATE KEY UPDATE
-        content = VALUES(content),
-        type = VALUES(type)
+        content = VALUES(content)
     </insert>
 </mapper>

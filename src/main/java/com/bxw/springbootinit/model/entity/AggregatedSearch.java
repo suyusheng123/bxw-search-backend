@@ -57,4 +57,6 @@ public class AggregatedSearch implements Serializable {
 	public static final String TITLE = "title";
 	public static final String CONTENT = "content";
 	public static final String TYPE = "type";
+
+	private String aggregatedTitleId;
 }

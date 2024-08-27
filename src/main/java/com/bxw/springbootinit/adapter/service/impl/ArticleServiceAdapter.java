@@ -2,6 +2,8 @@ package com.bxw.springbootinit.adapter.service.impl;
 
 import com.bxw.springbootinit.adapter.service.ServiceAdapter;
 import com.bxw.springbootinit.model.entity.Article;
+import com.bxw.springbootinit.model.vo.SearchVO;
+import com.bxw.springbootinit.service.AggregatedSearchService;
 import com.bxw.springbootinit.service.ArticleService;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +26,7 @@ public class ArticleServiceAdapter implements ServiceAdapter {
 	@Resource
 	private ArticleService articleService;
 
+
 	@Override
 	public List<?> searchDataList(List<Long> id) {
 		return articleService.searchArticleList(id);
@@ -33,5 +36,11 @@ public class ArticleServiceAdapter implements ServiceAdapter {
 	public boolean insertBatchDataList(List<?> dataList) {
 		if(articleService.insertBatchArticles((List<Article>)dataList)) return true;
 		return false;
+	}
+
+	@Override
+	public SearchVO searchListByTitle(String title, Long current, Long size) {
+		long offset = (current - 1) * size;
+		return articleService.searchListByTitle(title, offset);
 	}
 }

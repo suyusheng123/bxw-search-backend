@@ -52,12 +52,4 @@ public class AggregatedSearchVO implements Serializable {
 
     private static final Gson GSON = new Gson();
 
-    public static AggregatedSearchVO objToVo(AggregatedSearchEsDTO esDTO) {
-        if (esDTO == null) {
-            return null;
-        }
-        AggregatedSearchVO searchVO = new AggregatedSearchVO();
-        BeanUtils.copyProperties(esDTO, searchVO);
-        return searchVO;
-    }
 }

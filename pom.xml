@@ -160,6 +160,15 @@
             <version>2.9.1</version>
         </dependency>
 
+        <!--https://githubfast.com/redisson/redisson-->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.22.1</version>
+        </dependency>
+
+
+
     </dependencies>
 
     <build>

@@ -43,13 +43,15 @@ public class SearchController {
 	 * @return
 	 */
 	@GetMapping("/suggest")
-	public BaseResponse<List<SuggestVO>> getSearchSuggestList(@RequestParam(name = "keyword") String keyword) {
-		return ResultUtils.success(aggregatedSearchService.getSearchSuggest(keyword));
+	public BaseResponse<List<String>> getSearchSuggestList(@RequestParam(name = "keyword") String keyword) {
+		return ResultUtils.success(searchFacade.getSuggestSeachList(keyword));
 	}
 
 	@PostMapping("/async")
 	public BaseResponse<SearchVO> searchEs(@RequestBody QueryRequest queryRequest) {
-		return ResultUtils.success(searchFacade.searchAll(queryRequest));
+		SearchVO searchVO = new SearchVO();
+		searchFacade.searchAll(queryRequest,searchVO);
+		return ResultUtils.success(searchVO);
 	}
 
 

@@ -63,6 +63,11 @@ public class Article implements Serializable {
 	 */
 	private String publishTime;
 
+	/**
+	 * 根据标题生成的唯一id
+	 */
+	private String articleTitleId;
+
 
 
 	@TableField(exist = false)

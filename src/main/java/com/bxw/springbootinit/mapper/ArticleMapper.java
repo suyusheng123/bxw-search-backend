@@ -38,6 +38,7 @@ public interface ArticleMapper extends BaseMapper<Article> {
 			"<foreach item='item' index='index' collection='id' open='(' separator=',' close=')'>",
 			"#{item}",
 			"</foreach>",
+			"ORDER BY publishTime DESC",
 			"</script>"
 	})
 	List<ArticleVO> searchListFromEs(@Param("id") List<Long> id);
@@ -47,15 +48,30 @@ public interface ArticleMapper extends BaseMapper<Article> {
 	 */
 	@Select({
 			"<script>",
-			"SELECT id,url,title,date_format(publishTime,'%Y-%m-%d %H:%i:%s') as publishTime FROM article",
+			"SELECT id,url,title,content,date_format(publishTime,'%Y-%m-%d %H:%i:%s') as publishTime FROM article",
 			"<where>",
 			"<if test=\"title != null and title != ''\">",
 			"AND title LIKE CONCAT('%', #{title}, '%')",
 			"</if>",
 			"</where>",
 			"order by publishTime desc",
-			"LIMIT 10",
+			"LIMIT 10 OFFSET #{current}",
 			"</script>"
 	})
-	List<ArticleVO> searchList(@Param("title") String title);
+	List<ArticleVO> searchList(@Param("title") String title,@Param("current") Long offset);
+
+	/**
+	 * 根据标题查询总的记录数
+	 */
+	@Select({
+			"<script>",
+			"SELECT count(*) FROM article",
+			"<where>",
+			"<if test=\"title != null and title != ''\">",
+			"AND title LIKE CONCAT('%', #{title}, '%')",
+			"</if>",
+			"</where>",
+			"</script>"
+	})
+	Long searchListCount(@Param("title") String title);
 }

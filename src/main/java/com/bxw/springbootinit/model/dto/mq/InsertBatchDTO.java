@@ -25,7 +25,8 @@ public class InsertBatchDTO implements Serializable {
 
 	private String type;
 
-	private String key;
-
-	private Integer flag;
+	/**
+	 * 消息的id,用来判断是否已经被消费了
+	 */
+	private String messageKey;
 }

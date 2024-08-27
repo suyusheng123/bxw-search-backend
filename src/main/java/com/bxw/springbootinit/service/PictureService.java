@@ -7,6 +7,7 @@ import com.bxw.springbootinit.model.entity.Article;
 import com.bxw.springbootinit.model.entity.Picture;
 import com.bxw.springbootinit.model.vo.ArticleVO;
 import com.bxw.springbootinit.model.vo.PictureVO;
+import com.bxw.springbootinit.model.vo.SearchVO;
 
 import java.util.List;
 
@@ -33,5 +34,5 @@ public interface PictureService extends IService<Picture> {
     /**
      * 根据标题查询
      */
-    List<PictureVO> searchListByTitle(String title);
+    SearchVO searchListByTitle(String title,Long offset);
 }

@@ -7,6 +7,7 @@ import com.bxw.springbootinit.mapper.ArticleMapper;
 import com.bxw.springbootinit.model.dto.query.QueryRequest;
 import com.bxw.springbootinit.model.entity.Article;
 import com.bxw.springbootinit.model.vo.ArticleVO;
+import com.bxw.springbootinit.model.vo.SearchVO;
 import com.bxw.springbootinit.service.ArticleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -49,16 +50,21 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 	}
 
 	/**
-	 * 根据标题查询
+	 * 根据标题查询(包括记录总数和结果)
 	 * @param title
 	 * @return
 	 */
 	@Override
-	public List<ArticleVO> searchListByTitle(String title) {
-		List<ArticleVO> articleVOS = this.baseMapper.searchList(title);
-		return articleVOS.stream().sorted((article1, article2) -> {
+	public SearchVO searchListByTitle(String title, Long offset) {
+		Long total = this.baseMapper.searchListCount(title);
+		List<ArticleVO> articleVOS = this.baseMapper.searchList(title,offset);
+		List<ArticleVO> sortedArticleVOS = articleVOS.stream().sorted((article1, article2) -> {
 			// 降序
 			return article2.getPublishTime().compareTo(article1.getPublishTime());
 		}).collect(Collectors.toList());
+		SearchVO searchVO = new SearchVO();
+		searchVO.setTotal(total);
+		searchVO.setDataList(sortedArticleVOS);
+		return searchVO;
 	}
 }

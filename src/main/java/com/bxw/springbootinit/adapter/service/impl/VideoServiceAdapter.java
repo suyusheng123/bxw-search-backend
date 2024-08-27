@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bxw.springbootinit.adapter.service.ServiceAdapter;
 import com.bxw.springbootinit.model.entity.Article;
 import com.bxw.springbootinit.model.entity.Video;
+import com.bxw.springbootinit.model.vo.SearchVO;
 import com.bxw.springbootinit.model.vo.VideoVO;
+import com.bxw.springbootinit.service.AggregatedSearchService;
 import com.bxw.springbootinit.service.PictureService;
 import com.bxw.springbootinit.service.VideoService;
 import org.springframework.stereotype.Component;
@@ -25,6 +27,7 @@ public class VideoServiceAdapter implements ServiceAdapter {
 	@Resource
 	private VideoService videoService;
 
+
 	@Override
 	public List<VideoVO> searchDataList(List<Long> id) {
 		return videoService.searchVideoList(id);
@@ -35,4 +38,11 @@ public class VideoServiceAdapter implements ServiceAdapter {
 		if(videoService.insertBatchVideos((List<Video>)dataList)) return true;
 		return false;
 	}
+
+	@Override
+	public SearchVO searchListByTitle(String title, Long current, Long size) {
+		long offset = (current - 1) * size;
+		return videoService.searchListByTitle(title, offset);
+	}
+
 }

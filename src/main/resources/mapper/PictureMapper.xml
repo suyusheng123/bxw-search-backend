@@ -11,19 +11,20 @@
         <result property="sourceUrl" column="sourceUrl" jdbcType="VARCHAR"/>
         <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
         <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="pictureTitleId" column="pictureTitleId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,title,url,sourceUrl,
+        id,title,url,sourceUrl,pictureTitleId
         content,tags,createTime,updateTime
     </sql>
 
     <insert id="savePicture">
-        INSERT INTO picture (id, title, url, sourceUrl)
+        INSERT INTO picture (id, title, url, sourceUrl,pictureTitleId)
         VALUES
         <foreach collection="searchList" item="search" separator=",">
             (
-            #{search.id},#{search.title},#{search.url},#{search.sourceUrl}
+            #{search.id},#{search.title},#{search.url},#{search.sourceUrl},#{search.pictureTitleId}
             )
         </foreach>
         ON DUPLICATE KEY UPDATE

@@ -1,10 +1,6 @@
 package com.bxw.springbootinit.registry.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.bxw.springbootinit.adapter.datasource.DataSource;
-import com.bxw.springbootinit.adapter.datasource.impl.ArticleDataSourceAdapter;
-import com.bxw.springbootinit.adapter.datasource.impl.PictureDataSourceAdapter;
-import com.bxw.springbootinit.adapter.datasource.impl.VideoDataSourceAdapter;
 import com.bxw.springbootinit.adapter.service.ServiceAdapter;
 import com.bxw.springbootinit.adapter.service.impl.ArticleServiceAdapter;
 import com.bxw.springbootinit.adapter.service.impl.PictureServiceAdapter;

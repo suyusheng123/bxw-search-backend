@@ -61,5 +61,9 @@ public class Video implements Serializable {
 	 */
 	private String updateTime;
 
+	/**
+	 * 标题生成唯一id
+	 */
+	private String videoTitleId;
 
 }

@@ -37,6 +37,7 @@ public interface PictureMapper extends BaseMapper<Picture> {
 			"<foreach item='item' index='index' collection='id' open='(' separator=',' close=')'>",
 			"#{item}",
 			"</foreach>",
+			"ORDER BY id DESC",
 			"</script>"
 	})
 	List<PictureVO> searchListFromEs(@Param("id") List<Long> id);
@@ -52,9 +53,24 @@ public interface PictureMapper extends BaseMapper<Picture> {
 			"AND title LIKE CONCAT('%', #{title}, '%')",
 			"</if>",
 			"</where>",
-			"ORDER BY updateTime DESC",
-			"LIMIT 15",
+			"ORDER BY id DESC",
+			"LIMIT 15 OFFSET #{current}",
 			"</script>"
 	})
-	List<PictureVO> searchList(@Param("title") String title);
+	List<PictureVO> searchList(@Param("title") String title,@Param("current") Long offset);
+
+	/**
+	 * 根据标题查询记录总数
+	 */
+	@Select({
+			"<script>",
+			"SELECT count(*) FROM picture",
+			"<where>",
+			"<if test=\"title != null and title != ''\">",
+			"AND title LIKE CONCAT('%', #{title}, '%')",
+			"</if>",
+			"</where>",
+			"</script>"
+	})
+	Long searchListCount(@Param("title") String title);
 }

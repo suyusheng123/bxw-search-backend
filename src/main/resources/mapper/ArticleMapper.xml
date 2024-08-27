@@ -13,20 +13,21 @@
         <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
         <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
         <result property="publishTime" column="publishTime" jdbcType="TIMESTAMP"/>
+        <result property="articleTitleId" column="articleTitleId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,title,url,sourceUrl,
-        content,publishTime,createTime,updateTime
+        content,publishTime,articleTitleId,acreateTime,updateTime
     </sql>
 
     <insert id="saveArticle">
-        INSERT INTO article (id, title, url, sourceUrl,content,publishTime)
+        INSERT INTO article (id, title, url, sourceUrl,content,publishTime,articleTitleId)
         VALUES
         <foreach collection="searchList" item="search" separator=",">
             (
             #{search.id},#{search.title},#{search.url},#{search.sourceUrl},
-            #{search.content},#{search.publishTime}
+            #{search.content},#{search.publishTime},#{search.articleTitleId}
             )
         </foreach>
         ON DUPLICATE KEY UPDATE
