@@ -10,7 +10,6 @@
 ![image.png](https://cdn.nlark.com/yuque/0/2024/png/42613425/1724746810987-0f3cb015-6836-4932-bc2c-3d1a625baa66.png#averageHue=%23fdfcfb&clientId=u10ef2fe3-80e2-4&from=paste&height=726&id=uc00aa296&originHeight=908&originWidth=1655&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=179696&status=done&style=none&taskId=uf169afe9-d93d-4f2f-aa57-13b5f9fe1a9&title=&width=1324)
 ![image.png](https://cdn.nlark.com/yuque/0/2024/png/42613425/1724746764766-363a271a-40ce-4e55-8bf3-4641a7a5333d.png#averageHue=%23e5e5e5&clientId=u10ef2fe3-80e2-4&from=paste&height=695&id=uf2905de0&originHeight=869&originWidth=1752&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=450435&status=done&style=none&taskId=u92d69a48-465b-4399-9d06-007255d0073&title=&width=1401.6)
 ![image.png](https://cdn.nlark.com/yuque/0/2024/png/42613425/1724747112441-a2db384e-2cf0-42f0-9c9f-487f66463133.png#averageHue=%23aaa284&clientId=u10ef2fe3-80e2-4&from=paste&height=746&id=u1e4a0e8e&originHeight=933&originWidth=1862&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=961273&status=done&style=none&taskId=u2c88f4d8-a3e7-4dc2-bc85-4b95de545c4&title=&width=1489.6)
-
 ## 技术栈介绍
 ### 前端
 
@@ -54,7 +53,12 @@ nvm安装教程：
 Elastic全家桶search,kibana,logstash全是7.17.23版本
 mysql 8.0.23，Redis高版本都可以
 启动项目，放到idea，配置maven环境，java环境
+在启动之前一定要先启动src/main/java/com/bxw/springbootinit/mq/SearchInitMain.java的main方法
 最后点击启动MainApplication启动类启动
+sql文件sql/my_db.sql
+es建索引文件sql/es_index.txt，导入到kibana面板的devtools面板
+![image.png](https://cdn.nlark.com/yuque/0/2024/png/42613425/1724770531559-a825e066-2560-4688-a7bc-b57981bbdd88.png#averageHue=%2381b9d2&clientId=u16d32304-324d-4&from=paste&height=974&id=uc6907e79&originHeight=1218&originWidth=2357&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=272716&status=done&style=none&taskId=u3edf12a8-97f2-44f9-84b6-0821b8bd791&title=&width=1885.6)
+![image.png](https://cdn.nlark.com/yuque/0/2024/png/42613425/1724770620891-9172cc1d-411d-4589-b728-58541963fb6c.png#averageHue=%23e4eaf1&clientId=u16d32304-324d-4&from=paste&height=757&id=u0bfbc08f&originHeight=946&originWidth=1131&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=202064&status=done&style=none&taskId=u48cd86dc-1354-462f-a951-71f69b1950c&title=&width=904.8)
 api文档地址localhost:8101/api/doc.html,可以去测试
 ## 项目亮点
 ### 前端：
@@ -111,6 +115,8 @@ export default myThrottle;
 3. 对后端的返回内容是否进行高亮处理进行了判断，前端和后端约定了一个字段，isHighlight，前端发现isHighlight = 0,就进行高亮处理，高亮是采用分词器tiny-segmenter + 正则表达式匹配 + v-html做的，如果为1，那么进行渲染
 
 ### 后端：
+
+代码地址：https://bgithub.xyz/suyusheng123/bxw-search-backend
 
 1. 为了提高搜索平台的响应速度，采用了Redis锁 + 缓存机制，当大量用户去搜索内容时，并且这个内容es，mysql都没有的情况下，先让一个用户去把要搜索的内容搜索出来，搜索出来以后，存到redis，后续的用户如果搜索到同一内容直接从redis中读取即可
 2. 由于搜索平台一开始的数据库的数据量非常少，用户搜索起来几乎搜索不到内容，体验感差，采用从数据库搜索出的总数total和当前页码current * 当前页显示的数量size进行比较，如果大于，说明我的数据还是能至少继续分current + 1页，如果不是大于，那么说明不能继续分current + 1页了，那我就改从第三方网站上抓取数据，整体逻辑图见搜索流程

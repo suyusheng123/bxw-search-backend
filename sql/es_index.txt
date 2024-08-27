@@ -1,0 +1,52 @@
+PUT aggregated_search
+{
+  "mappings": {
+    "properties": {
+      "content": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        },
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart"
+      },
+      "createTime": {
+        "type": "date",
+        "format": "yyyy-MM-dd HH:mm:ss"
+      },
+      "id": {
+        "type": "long"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          },
+          "complete": {
+            "type": "completion",
+            "preserve_separators": false,
+            "preserve_position_increments": true,
+            "max_input_length": 100
+          }
+        }
+      },
+      "updateTime": {
+        "type": "date",
+        "format": "yyyy-MM-dd HH:mm:ss"
+      },
+      "type": {
+        "type": "integer"
+      },
+      "aggregatedTitleId": {
+        "type": "keyword"
+      }
+    }
+  }
+}
