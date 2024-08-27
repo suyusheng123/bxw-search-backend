@@ -58,6 +58,7 @@ mysql 8.0.23，Redis高版本都可以
 api文档地址localhost:8101/api/doc.html,可以去测试
 ## 项目亮点
 ### 前端：
+代码地址：https://bgithub.xyz/suyusheng123/bxw-search-front
 
 1. 在用户输入文字到文本框时自定义了防抖函数，防止由于用户在不断输入文本时造成的多次请求后端搜索建议接口
 ```typescript
