@@ -2,6 +2,7 @@ package com.bxw.springbootinit.utils;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Random;
 
 /**
  * ClassName: CsvGenerator
@@ -22,20 +23,21 @@ public class CsvGenerator {
 			// 生成CSV文件的内容
 			int[] pageSizes = {10, 10, 12};
 			String[] searchTexts = {
-					"红帽", "蓝帽", "绿帽", "黄帽", "紫帽", "黑帽", "白帽", "灰帽", "橙帽", "粉帽",
-					"棕帽", "金帽", "银帽", "铜帽", "青帽", "蓝绿帽", "深蓝帽", "浅蓝帽", "深红帽", "浅红帽"
+					"vue", "react", "java"
 			};
 			String[] types = {"article", "picture", "video"};
-
-			for (int i = 0; i < 200; i++) {
-				int typeIndex = i % 3; // 轮换使用types数组中的值
-				int searchTextIndex = i % 20; // 轮换使用searchTexts数组中的值
-				writer.append((i + 1) + ",")
-						.append(pageSizes[typeIndex] + ",")
-						.append(searchTexts[searchTextIndex] + ",")
+			for (int i = 0; i < 1000; i++) {
+				// 生成1到3的随机数
+				Random random = new Random();
+				int index = random.nextInt(3);
+                int searchIndex = random.nextInt(3);
+				int page = i % 10 + 1;
+				writer.append(page + ",")
+						.append(pageSizes[index] + ",")
+						.append(searchTexts[searchIndex] + ",")
 						.append("id,")
 						.append("descend,")
-						.append(types[typeIndex] + "\n");
+						.append(types[index] + "\n");
 			}
 
 			System.out.println("CSV 文件已成功生成: " + fileName);

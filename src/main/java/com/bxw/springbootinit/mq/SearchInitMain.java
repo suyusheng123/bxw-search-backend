@@ -17,6 +17,9 @@ public class SearchInitMain {
         //创建链接工厂
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
+        factory.setVirtualHost("/bxw");
+        factory.setUsername("bxw");
+        factory.setPassword("123456");
         //建立链接、创建频道
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
@@ -25,7 +28,6 @@ public class SearchInitMain {
             //创建Bi死信队列
             channel.queueDeclare(SearchMqConstant.SEARCH_DLX_QUEUE_NAME, true, false, false, null);
             channel.queueBind(SearchMqConstant.SEARCH_DLX_QUEUE_NAME, SearchMqConstant.SEARCH_DLX_EXCHANGE_NAME, SearchMqConstant.SEARCH_DLX_ROUTING_KEY);
-
             //创建 esSearch 交换机
             channel.exchangeDeclare(SearchMqConstant.SEARCH_EXCHANGE_NAME, "direct");
             //指定死信队列参数

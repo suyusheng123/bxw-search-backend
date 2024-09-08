@@ -11,29 +11,22 @@ import com.bxw.springbootinit.adapter.service.ServiceAdapter;
 import com.bxw.springbootinit.common.ErrorCode;
 import com.bxw.springbootinit.constant.RedisConstant;
 import com.bxw.springbootinit.exception.BusinessException;
-import com.bxw.springbootinit.model.dto.mq.InsertBatchDTO;
 import com.bxw.springbootinit.model.dto.query.QueryRequest;
 import com.bxw.springbootinit.model.dto.query.SearchQueryEsRequest;
-import com.bxw.springbootinit.model.enums.OperationTypeEnum;
 import com.bxw.springbootinit.model.enums.SearchTypeEnum;
 import com.bxw.springbootinit.model.vo.AggregatedSearchVO;
 import com.bxw.springbootinit.model.vo.SearchVO;
 import com.bxw.springbootinit.model.vo.SuggestVO;
-import com.bxw.springbootinit.mq.SearchMessageProducer;
 import com.bxw.springbootinit.registry.method.aggregatedservice.FetchDataMethodRegistry;
 import com.bxw.springbootinit.registry.service.TypeServiceRegistry;
 import com.bxw.springbootinit.service.AggregatedSearchService;
-import com.bxw.springbootinit.service.RedisOperationService;
-import com.bxw.springbootinit.service.RedisOperationService;
-import com.sun.xml.internal.fastinfoset.vocab.SerializerVocabulary;
-import io.lettuce.core.RedisClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.internal.StringUtil;
 import org.redisson.api.RLock;
+import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -42,8 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -64,8 +55,6 @@ public class SearchFacade {
 
 	@Resource
 	private RedissonClient redissonClient;
-	@Resource
-	private SearchMessageProducer searchMessageProducer;
 
 
 	@Resource
@@ -81,12 +70,6 @@ public class SearchFacade {
 	@Resource
 	private FetchDataMethodRegistry fetchDataMethodRegistry;
 
-	// 线程池
-//	private final ThreadPoolExecutor esSearchExecutor = new ThreadPoolExecutor(4,
-//			10,
-//			10,
-//			TimeUnit.SECONDS,
-//			new LinkedBlockingQueue<>(100));
 
 	/**
 	 * 聚合搜索接口简易版(直接从数据库拿的数据)
@@ -142,135 +125,111 @@ public class SearchFacade {
 		long current = queryRequest.getCurrent();
 		long size = queryRequest.getPageSize();
 		SearchVO searchByEsVO = new SearchVO();
-		SearchVO searchByMysqlVO = new SearchVO();
 		SearchVO searchByFetchVO = new SearchVO();
 		String key = RedisConstant.SEARCH_KEY + enumByValue.getValue() + ":" + searchText + ":" + current;
 		String searchLockKey = RedisConstant.SEARCH_LOCK_KEY + enumByValue.getValue() + ":" + searchText + ":" + current;
-//		SearchVO searchVO = new SearchVO();
-		RLock searchLock = redissonClient.getLock(searchLockKey);
-		// 利用Redisson进行加锁;
-		boolean tryLock = false;
-		try {
-			tryLock = searchLock.tryLock(6, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-			log.error("加锁异常,异常为{}", e);
-		}
-		if (tryLock) {
-			try {
-				log.info("线程{}加锁成功,key为{}", Thread.currentThread().getName(), searchLockKey);
-				log.info("开始从Redis中查询数据...");
-				//从redis中获取搜索数据,考虑到分页的情况,存储在Redis的key对应value类型调整为String类型
-				if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(key))) {
-					String cacheSearchJson = stringRedisTemplate.opsForValue().get(key);
-					Map<String, Object> cacheSearchMap = JSONUtil.toBean(cacheSearchJson, Map.class);
-					if (CollectionUtil.isNotEmpty(cacheSearchMap)) {
-						// 先获取map中的current字段,判断是不是我当前页的数据
-						int redisCurrent = (int) cacheSearchMap.get("current");
-						if (Objects.equals((long) redisCurrent, current)) {
-							log.info("Redis中查询数据成功，key为{}，第{}页", key, current);
-							JSONArray dataList = (JSONArray) cacheSearchMap.get("dataList");
-							List<?> searchList = dataList.stream()
-									.map(data -> BeanUtil.toBean(data, Map.class))
-									.collect(Collectors.toList());
-							searchVO.setDataList(searchList);
-							int total = (int) cacheSearchMap.get("total");
-							searchVO.setTotal((long) total);
-							searchVO.setCurrent(current);
-							log.info("Redis中查询数据成功");
-							return;
-						}
-					}
-				}
-
-				log.info("Redis中没查询到第{}页数据,开始从Es中查询数据...",current);
-				// 查es
-				SearchQueryEsRequest searchQueryEsRequest = BeanUtil.copyProperties(queryRequest, SearchQueryEsRequest.class, "type");
-				searchQueryEsRequest.setType(enumByValue.getType());
-				SearchVO searchEs = aggregatedSearchService.aggregatedSearchEs(searchQueryEsRequest);
-				// 将searchVO的dataList转化成aggregatedSearchVOS
-				List<?> esDataList = searchEs.getDataList();
-				if (!CollectionUtil.isEmpty(esDataList)) {
-					// 将seachEs里的total取出来
-					long esTotal = searchEs.getTotal();
-					List<AggregatedSearchVO> aggregatedSearchVOS = esDataList.stream()
-							.map(data -> BeanUtil.toBean(data, AggregatedSearchVO.class))
+		log.info("开始从Redis中查询数据...");
+		//从redis中获取搜索数据,考虑到分页的情况,存储在Redis的key对应value类型调整为String类型
+		if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(key))) {
+			String cacheSearchJson = stringRedisTemplate.opsForValue().get(key);
+			Map<String, Object> cacheSearchMap = JSONUtil.toBean(cacheSearchJson, Map.class);
+			if (CollectionUtil.isNotEmpty(cacheSearchMap)) {
+				// 先获取map中的current字段,判断是不是我当前页的数据
+				int redisCurrent = (int) cacheSearchMap.get("current");
+				if (Objects.equals((long) redisCurrent, current)) {
+					log.info("Redis中查询数据成功，key为{}，第{}页", key, current);
+					JSONArray dataList = (JSONArray) cacheSearchMap.get("dataList");
+					List<?> searchList = dataList.stream()
+							.map(data -> BeanUtil.toBean(data, Map.class))
 							.collect(Collectors.toList());
-					if (!CollectionUtil.isEmpty(aggregatedSearchVOS)) {
-						//如果es有的话,那么拿到id集合再去数据库里查询
-						// 根据不同的类型，去查对应的数据库
-						log.info("Es查询{}数据成功,开始从数据库查询{}数据...", type, type);
-						ServiceAdapter serviceAdapter = typeServiceRegistry.getServiceByType(type);
-						List<Long> ids = aggregatedSearchVOS.stream().map(AggregatedSearchVO::getId).collect(Collectors.toList());
-						if (CollectionUtil.isEmpty(ids)) {
-							log.info("Es查询到的id集合空，{}", ids);
-							return;
-						}
-						List<?> listFromDataSource = serviceAdapter.searchDataList(ids);
-						// 讲searchEsList中的对象title,content赋值给listFromdataSource
-						if (CollectionUtil.isEmpty(listFromDataSource)) {
-							log.error("数据库根据id查询到的{}数据为空:{}", type, listFromDataSource);
-							return;
-						}
-						log.info("Es查询{}数据成功,数据库查询{}数据成功", type, type);
-						// 讲listFromDataSource里的每个对象转化成Map对象再次组成集合
-						List<Map<String, Object>> dataSourceMapList = listFromDataSource.stream().map(BeanUtil::beanToMap).collect(Collectors.toList());
-						// 将es查询到的数据转化成map
-						Map<Long, AggregatedSearchVO> esMap = aggregatedSearchVOS.stream().collect(Collectors.toMap(AggregatedSearchVO::getId, v -> v));
-						// 将es查询到的数据和mysql查询到的数据合并
-						for (Map<String, Object> o : dataSourceMapList) {
-							Long id = (Long) o.get("id");
-							if (esMap.containsKey(id)) {
-								o.put("title", esMap.get(id).getTitle());
-								if (!StringUtil.isBlank(esMap.get(id).getContent()) && !Objects.equals(esMap.get(id).getContent(), null)) {
-									o.put("content", esMap.get(id).getContent());
-								}
-							}
-						}
-						log.info("Es和mysql查询数据成功");
-						searchByEsVO.setDataList(dataSourceMapList);
-						searchByEsVO.setTotal(esTotal);
-						searchByEsVO.setCurrent(current);
-						searchByEsVO.setIsHighlight(1);
-						// 判断从es查询到的数据总数是否大于当前页面所要展示的条数
-						if (esTotal > current * size) {
-							List<?> dataList = searchByEsVO.getDataList();
-							long total = searchByEsVO.getTotal();
-							searchVO.setTotal(total);
-							searchVO.setDataList(dataList);
-							searchVO.setCurrent(current);
-							searchVO.setIsHighlight(1);
-							// 将searchVO对象转化为json串
-							// 将搜索数据缓存到redis中
-							String esJson = JSONUtil.toJsonStr(searchVO);
-							saveSearchList(key, esJson);
-							log.info("Es查询到的数据总数total:{}大于current * size:{}可以继续分页,key为{}直接返回",total, current * size,key);
-							return;
-						}
-						log.info("Es查询到的数据总数total:{}小于current*size:{}不足以继续分页,key为{}开始爬虫...",esTotal,current * size,key);
-					}
-
+					searchVO.setDataList(searchList);
+					int total = (int) cacheSearchMap.get("total");
+					searchVO.setTotal((long) total);
+					searchVO.setCurrent(current);
+					log.info("Redis中查询数据成功");
+					return;
 				}
-//				log.info("Es和Redis没查询到数据，开始爬第三方数据...");
-				// 查数据库
-//				ServiceAdapter serviceAdapter = typeServiceRegistry.getServiceByType(type);
-//				SearchVO mysqlSearch = serviceAdapter.searchListByTitle(searchText, current, size);
-//				List<?> mysqlDataList = mysqlSearch.getDataList();
-//				long mysqlTotal = mysqlSearch.getTotal();
-//				if (!CollectionUtil.isEmpty(mysqlDataList)) {
-//					log.info("mysql中查询数据成功");
-//					searchByMysqlVO.setDataList(mysqlDataList);
-//					searchByMysqlVO.setTotal(mysqlTotal);
-//					searchByMysqlVO.setCurrent(current);
-//					if (mysqlTotal > current * size) {
-//						//将搜索数据缓存到redis中
-//						searchVO.setTotal(searchByMysqlVO.getTotal());
-//						searchVO.setDataList(searchByMysqlVO.getDataList());
-//						searchVO.setCurrent(current);
-//						saveSearchList(key, JSONUtil.toJsonStr(searchVO));
-//						return;
-//					}
-//					log.info("mysql查询到的数据总数{}小于当前页面所要展示的条数{},key为{}", mysqlTotal, size, key);
-//				}
+			}
+		}
+		log.info("Redis中没查询到第{}页数据,开始从Es中查询数据...", current);
+		// 查es
+		SearchQueryEsRequest searchQueryEsRequest = BeanUtil.copyProperties(queryRequest, SearchQueryEsRequest.class, "type");
+		searchQueryEsRequest.setType(enumByValue.getType());
+		SearchVO searchEs = aggregatedSearchService.aggregatedSearchEs(searchQueryEsRequest);
+		// 将searchVO的dataList转化成aggregatedSearchVOS
+		List<?> esDataList = searchEs.getDataList();
+		if (!CollectionUtil.isEmpty(esDataList)) {
+			// 将seachEs里的total取出来
+			long esTotal = searchEs.getTotal();
+			List<AggregatedSearchVO> aggregatedSearchVOS = esDataList.stream()
+					.map(data -> BeanUtil.toBean(data, AggregatedSearchVO.class))
+					.collect(Collectors.toList());
+			if (!CollectionUtil.isEmpty(aggregatedSearchVOS)) {
+				//如果es有的话,那么拿到id集合再去数据库里查询
+				// 根据不同的类型，去查对应的数据库
+				log.info("Es查询{}数据成功,开始从数据库查询{}数据...", type, type);
+				ServiceAdapter serviceAdapter = typeServiceRegistry.getServiceByType(type);
+				List<Long> ids = aggregatedSearchVOS.stream().map(AggregatedSearchVO::getId).collect(Collectors.toList());
+				if (CollectionUtil.isEmpty(ids)) {
+					log.info("Es查询到的id集合空，{}", ids);
+					return;
+				}
+				List<?> listFromDataSource = serviceAdapter.searchDataList(ids);
+				// 讲searchEsList中的对象title,content赋值给listFromDataSource
+				if (CollectionUtil.isEmpty(listFromDataSource)) {
+					log.error("数据库根据id查询到的{}数据为空:{}", type, listFromDataSource);
+					return;
+				}
+				log.info("Es查询{}数据成功,数据库查询{}数据成功", type, type);
+				// 讲listFromDataSource里的每个对象转化成Map对象再次组成集合
+				List<Map<String, Object>> dataSourceMapList = listFromDataSource.stream().map(BeanUtil::beanToMap).collect(Collectors.toList());
+				// 将es查询到的数据转化成map
+				Map<Long, AggregatedSearchVO> esMap = aggregatedSearchVOS.stream().collect(Collectors.toMap(AggregatedSearchVO::getId, v -> v));
+				// 将es查询到的数据和mysql查询到的数据合并
+				for (Map<String, Object> o : dataSourceMapList) {
+					Long id = (Long) o.get("id");
+					if (esMap.containsKey(id)) {
+						o.put("title", esMap.get(id).getTitle());
+						if (!StringUtil.isBlank(esMap.get(id).getContent()) && !Objects.equals(esMap.get(id).getContent(), null)) {
+							o.put("content", esMap.get(id).getContent());
+						}
+					}
+				}
+				log.info("Es和mysql查询数据成功");
+				searchByEsVO.setDataList(dataSourceMapList);
+				searchByEsVO.setTotal(esTotal);
+				searchByEsVO.setCurrent(current);
+				searchByEsVO.setIsHighlight(1);
+				// 判断从es查询到的数据总数是否大于当前页面所要展示的条数
+				if (esTotal > current * size) {
+					List<?> dataList = searchByEsVO.getDataList();
+					long total = searchByEsVO.getTotal();
+					searchVO.setTotal(total);
+					searchVO.setDataList(dataList);
+					searchVO.setCurrent(current);
+					searchVO.setIsHighlight(1);
+					// 将searchVO对象转化为json串
+					// 将搜索数据缓存到redis中
+					String esJson = JSONUtil.toJsonStr(searchVO);
+					saveSearchList(key, esJson);
+					log.info("Es查询到的数据总数total:{}大于current * size:{}可以继续分页,key为{}直接返回", total, current * size, key);
+					return;
+				}
+				log.info("Es查询到的数据总数total:{}小于current*size:{}不足以继续分页,key为{}开始爬虫...", esTotal, current * size, key);
+			}
+		}
+
+//		RLock searchLock = redissonClient.getLock(searchLockKey);
+		// Step 1: 获取 Redisson 读写锁
+		RReadWriteLock rwLock = redissonClient.getReadWriteLock(searchLockKey);
+		// 获取写锁
+		RLock wLock = rwLock.writeLock();
+		// 利用Redisson进行加锁;
+		boolean tryWLock = false;
+		tryWLock = wLock.tryLock();
+		if (tryWLock) {
+			try {
+				log.info("线程{}加写锁成功,key为{}", Thread.currentThread().getName(), searchLockKey);
 				// 爬取数据
 				log.info("Es,Redis没查询到第{}页数据,key为{}开始爬取数据...", current, key);
 				FetchDataMethodAdapter methodByType = fetchDataMethodRegistry.getMethodByType(type);
@@ -291,25 +250,25 @@ public class SearchFacade {
 						// 将searchVO对象转化为json串
 						//将搜索数据缓存到redis中
 						saveSearchList(key, JSONUtil.toJsonStr(searchVO));
-						log.info("爬取数据查询到的数据总数total:{}大于current*size:{}可以继续分页,key为{}", fetchSearchVO.getTotal(), current*size, key);
+						log.info("爬取数据查询到的数据总数total:{}大于current*size:{}可以继续分页,key为{}", fetchSearchVO.getTotal(), current * size, key);
 						return;
 					}
-					log.info("爬取数据查询到的数据总数total:{}小于current*size{},key为{}", fetchSearchVO.getTotal(), current*size, key);
+					log.info("爬取数据查询到的数据总数total:{}小于current*size{},key为{}", fetchSearchVO.getTotal(), current * size, key);
 				}
 				// 判断哪个VO的total不为0
-				if (searchByFetchVO.getTotal() != 0) {
-					List<?> dataList = searchByFetchVO.getDataList();
-					long total = searchByFetchVO.getTotal();
-					searchVO.setTotal(total);
-					searchVO.setDataList(dataList);
-					searchVO.setCurrent(current);
-				}else if (searchByEsVO.getTotal() != 0) {
+				if (searchByEsVO.getTotal() != 0) {
 					List<?> dataList = searchByEsVO.getDataList();
 					long total = searchByEsVO.getTotal();
 					searchVO.setTotal(total);
 					searchVO.setDataList(dataList);
 					searchVO.setCurrent(current);
 					searchVO.setIsHighlight(1);
+				} else if (searchByFetchVO.getTotal() != 0) {
+					List<?> dataList = searchByFetchVO.getDataList();
+					long total = searchByFetchVO.getTotal();
+					searchVO.setTotal(total);
+					searchVO.setDataList(dataList);
+					searchVO.setCurrent(current);
 				}
 				// 将searchVO对象转化为json串
 				// 将搜索数据缓存到redis中
@@ -319,22 +278,51 @@ public class SearchFacade {
 				log.error("线程{},key为{},异常为:{}", Thread.currentThread().getName(), key, e);
 			} finally {
 				log.info("线程{}释放锁,key为{}", Thread.currentThread().getName(), searchLockKey);
-				searchLock.unlock();
+				wLock.unlock();
+			}
+		} else {
+			RLock rLock = rwLock.readLock();
+			boolean tryRLock = false;
+			try {
+				tryRLock = rLock.tryLock(6, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				log.error("加锁异常,异常为{}", e);
+			}
+			if (tryRLock) {
+				try {
+					log.info("线程{}加读锁成功，key为{}", Thread.currentThread().getName(), searchLockKey);
+					log.info("开始从Redis中查询数据...");
+					//从redis中获取搜索数据,考虑到分页的情况,存储在Redis的key对应value类型调整为String类型
+					if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(key))) {
+						String cacheSearchJson = stringRedisTemplate.opsForValue().get(key);
+						Map<String, Object> cacheSearchMap = JSONUtil.toBean(cacheSearchJson, Map.class);
+						if (CollectionUtil.isNotEmpty(cacheSearchMap)) {
+							// 先获取map中的current字段,判断是不是我当前页的数据
+							int redisCurrent = (int) cacheSearchMap.get("current");
+							if (Objects.equals((long) redisCurrent, current)) {
+								log.info("Redis中查询数据成功，key为{}，第{}页", key, current);
+								JSONArray dataList = (JSONArray) cacheSearchMap.get("dataList");
+								List<?> searchList = dataList.stream()
+										.map(data -> BeanUtil.toBean(data, Map.class))
+										.collect(Collectors.toList());
+								searchVO.setDataList(searchList);
+								int total = (int) cacheSearchMap.get("total");
+								searchVO.setTotal((long) total);
+								searchVO.setCurrent(current);
+								log.info("Redis中查询数据成功");
+								return;
+							}
+						}
+					}
+				} catch (Exception e) {
+					log.error("线程{},key为{},异常为:{}", Thread.currentThread().getName(), key, e);
+				} finally {
+					log.info("线程{}释放读锁,key为{}", Thread.currentThread().getName(), searchLockKey);
+					rLock.unlock();
+				}
 			}
 		}
 	}
-
-
-//		//线程池
-//		//爬取数据并入库
-//		CompletableFuture<? extends List<?>> esSearchTask = CompletableFuture.supplyAsync(() -> {
-//			// 爬取数据
-//			return dataSourceByType.doSearch(searchText, current, size);
-//		}, esSearchExecutor).exceptionally((e) ->{
-//			 log.error("数据入库失败:{}",e.getMessage());
-//			return new ArrayList<>();
-//		});
-//		List<?> searchFromDataSources = esSearchTask.join();
 
 	public void saveSearchList(String key, String value) {
 		// 开始同步数据到Redis

@@ -404,12 +404,12 @@ public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMap
 		SearchVO searchVO = new SearchVO();
 		searchVO.setTotal(total);
 		searchVO.setDataList(articleVOS);
-		String messageLockKey = RedisConstant.MESSAGE_LOCK_KEY + SearchTypeEnum.Article.getValue() + ":" + searchText + ":" + current;
+//		String messageLockKey = RedisConstant.MESSAGE_LOCK_KEY + SearchTypeEnum.Article.getValue() + ":" + searchText + ":" + current;
 		String messageKey = RedisConstant.MESSAGE_KEY + SearchTypeEnum.Article.getValue() + ":" + searchText + ":" + current;
-		log.info("文章数据爬取成功,开始加锁发送消息,消息key为{}", messageLockKey);
-		RLock messageLock = redissonClient.getLock(messageLockKey);
-		boolean isMessageLock = messageLock.tryLock();
-		if (isMessageLock) {
+//		log.info("文章数据爬取成功,开始加锁发送消息,消息key为{}", messageLockKey);
+//		RLock messageLock = redissonClient.getLock(messageLockKey);
+//		boolean isMessageLock = messageLock.tryLock();
+//		if (isMessageLock) {
 			try {
 				log.info("{}线程加锁成功,开始判断消息是否被消费过了...", Thread.currentThread().getName());
 				// 先判断这则消息是否已经被消费或者正在消费中,0表示未消费或者消费失败,1表示消费成功或者正在消费
@@ -425,11 +425,12 @@ public class AggregatedSearchServiceImpl extends ServiceImpl<AggregatedSearchMap
 				log.error("消息{}发送异常,异常为{}", messageKey, e);
 				redisOperationService.setMessageStatus(messageKey, "0");
 				return searchVO;
-			} finally {
-				log.info("线程{}释放锁,锁的key为{}", Thread.currentThread().getName(), messageLockKey);
-				messageLock.unlock();
 			}
-		}
+//			finally {
+//				log.info("线程{}释放锁,锁的key为{}", Thread.currentThread().getName(), messageLockKey);
+//				messageLock.unlock();
+//			}
+//		}
 		return searchVO;
 	}
 
