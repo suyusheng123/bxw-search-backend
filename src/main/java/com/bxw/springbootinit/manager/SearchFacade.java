@@ -43,7 +43,6 @@ import java.util.stream.Collectors;
  * Package:com.bxw.springbootinit.manager
  * Description:
  * 搜索门面模式
- *
  * @Author 卜翔威
  * @Create 2024/8/14 8:43
  * @Version 1.0
@@ -103,8 +102,7 @@ public class SearchFacade {
 
 	/**
 	 * 聚合搜索升级版最初(redis抗压 + 线程池爬取数据到mysql+ mysql同步es + es高亮 + 数据组合)
-	 * 聚合搜索升级版之后(redis抗压 + 爬取数据返回前端 + mq同步数据 + es高亮关键字)
-	 *
+	 * 聚合搜索升级版之后(redis抗压 + 爬取数据时采用读写锁的方式)
 	 * @param queryRequest
 	 * @return
 	 */
